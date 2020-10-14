@@ -56,41 +56,41 @@ pipeline {
                 }
             }
         }
+        // TODO(hasheddan): re-enable when we have unit tests
+        // stage('Unit Tests') {
+        //     when {
+        //         expression {
+        //             return env.shouldBuild != "false"
+        //         }
+        //     }
+        //     steps {
+        //         sh './build/run make -j\$(nproc) test'
+        //         sh './build/run make -j\$(nproc) cobertura'
+        //     }
+        //     post {
+        //         always {
+        //             archiveArtifacts "_output/tests/**/*"
+        //             junit "_output/tests/**/unit-tests.xml"
+        //             cobertura coberturaReportFile: '_output/tests/**/cobertura-coverage.xml',
+        //                     classCoverageTargets: '50, 0, 0',
+        //                     conditionalCoverageTargets: '70, 0, 0',
+        //                     lineCoverageTargets: '40, 0, 0',
+        //                     methodCoverageTargets: '30, 0, 0',
+        //                     packageCoverageTargets: '80, 0, 0',
+        //                     autoUpdateHealth: false,
+        //                     autoUpdateStability: false,
+        //                     enableNewApi: false,
+        //                     failUnhealthy: false,
+        //                     failUnstable: false,
+        //                     maxNumberOfBuilds: 0,
+        //                     onlyStable: false,
+        //                     sourceEncoding: 'ASCII',
+        //                     zoomCoverageChart: false
+        //         }
+        //     }
+        // }
 
-        stage('Unit Tests') {
-            when {
-                expression {
-                    return env.shouldBuild != "false"
-                }
-            }
-            steps {
-                sh './build/run make -j\$(nproc) test'
-                sh './build/run make -j\$(nproc) cobertura'
-            }
-            post {
-                always {
-                    archiveArtifacts "_output/tests/**/*"
-                    junit "_output/tests/**/unit-tests.xml"
-                    cobertura coberturaReportFile: '_output/tests/**/cobertura-coverage.xml',
-                            classCoverageTargets: '50, 0, 0',
-                            conditionalCoverageTargets: '70, 0, 0',
-                            lineCoverageTargets: '40, 0, 0',
-                            methodCoverageTargets: '30, 0, 0',
-                            packageCoverageTargets: '80, 0, 0',
-                            autoUpdateHealth: false,
-                            autoUpdateStability: false,
-                            enableNewApi: false,
-                            failUnhealthy: false,
-                            failUnstable: false,
-                            maxNumberOfBuilds: 0,
-                            onlyStable: false,
-                            sourceEncoding: 'ASCII',
-                            zoomCoverageChart: false
-                }
-            }
-        }
-
-                stage("Integration Tests"){
+        stage("Integration Tests"){
             when {
                 expression {
                     return env.shouldBuild != "false"
@@ -101,18 +101,18 @@ pipeline {
             }
         }
         
-        stage('Publish Coverage to Codecov') {
-            when {
-                expression {
-                    return env.shouldBuild != "false"
-                }
-            }
-            steps {
-                script {
-                    sh 'curl -s https://codecov.io/bash | bash -s -- -c -f _output/tests/**/coverage.txt -F unittests'
-                }
-            }
-        }
+        // stage('Publish Coverage to Codecov') {
+        //     when {
+        //         expression {
+        //             return env.shouldBuild != "false"
+        //         }
+        //     }
+        //     steps {
+        //         script {
+        //             sh 'curl -s https://codecov.io/bash | bash -s -- -c -f _output/tests/**/coverage.txt -F unittests'
+        //         }
+        //     }
+        // }
 
         stage('Publish') {
             when {
