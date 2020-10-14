@@ -22,31 +22,60 @@ import (
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 )
 
-// A ProviderSpec defines the desired state of a Provider.
-type ProviderSpec struct {
-	runtimev1alpha1.ProviderSpec `json:",inline"`
+// A ProviderConfigSpec defines the desired state of a ProviderConfig.
+type ProviderConfigSpec struct {
+	runtimev1alpha1.ProviderConfigSpec `json:",inline"`
+}
+
+// A ProviderConfigStatus reflects the observed state of a ProviderConfig.
+type ProviderConfigStatus struct {
+	runtimev1alpha1.ProviderConfigStatus `json:",inline"`
 }
 
 // +kubebuilder:object:root=true
 
-// A Provider configures a GitHub 'provider', i.e. a connection to GitHub as a
-// particular user or application.
-// +kubebuilder:printcolumn:name="PROJECT-ID",type="string",JSONPath=".spec.projectID"
+// A ProviderConfig configures access to Github.
+// +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:printcolumn:name="SECRET-NAME",type="string",JSONPath=".spec.credentialsSecretRef.name",priority=1
 // +kubebuilder:resource:scope=Cluster
-type Provider struct {
+type ProviderConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec ProviderSpec `json:"spec"`
+	Spec   ProviderConfigSpec   `json:"spec"`
+	Status ProviderConfigStatus `json:"status"`
 }
 
 // +kubebuilder:object:root=true
 
-// ProviderList contains a list of Provider
-type ProviderList struct {
+// ProviderConfigList contains a list of ProviderConfig.
+type ProviderConfigList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Provider `json:"items"`
+	Items           []ProviderConfig `json:"items"`
+}
+
+// +kubebuilder:object:root=true
+
+// A ProviderConfigUsage indicates that a resource is using a ProviderConfig.
+// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:printcolumn:name="CONFIG-NAME",type="string",JSONPath=".providerConfigRef.name"
+// +kubebuilder:printcolumn:name="RESOURCE-KIND",type="string",JSONPath=".resourceRef.kind"
+// +kubebuilder:printcolumn:name="RESOURCE-NAME",type="string",JSONPath=".resourceRef.name"
+// +kubebuilder:resource:scope=Cluster
+type ProviderConfigUsage struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	runtimev1alpha1.ProviderConfigUsage `json:",inline"`
+}
+
+// +kubebuilder:object:root=true
+
+// ProviderConfigUsageList contains a list of ProviderConfigUsage
+type ProviderConfigUsageList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []ProviderConfigUsage `json:"items"`
 }
