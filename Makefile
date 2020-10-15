@@ -14,7 +14,6 @@ PLATFORMS ?= linux_amd64 linux_arm64
 # ====================================================================================
 # Setup Output
 
-S3_BUCKET ?= crossplane.releases
 -include build/makelib/output.mk
 
 # ====================================================================================
@@ -43,15 +42,10 @@ GO111MODULE = on
 -include build/makelib/k8s_tools.mk
 
 # ====================================================================================
-# Setup Stacks
-
-STACK_PACKAGE=stack-package
-export STACK_PACKAGE
-STACK_PACKAGE_REGISTRY=$(STACK_PACKAGE)/.registry
-STACK_PACKAGE_REGISTRY_SOURCE=config/stack/manifests
+# Setup Images
 
 DOCKER_REGISTRY = crossplane
-IMAGES = provider-github
+IMAGES = provider-github provider-github-controller
 -include build/makelib/image.mk
 
 # ====================================================================================
@@ -76,6 +70,14 @@ cobertura:
 		grep -v zz_generated.deepcopy | \
 		$(GOCOVER_COBERTURA) > $(GO_TEST_OUTPUT)/cobertura-coverage.xml
 
+crds.clean:
+	@$(INFO) cleaning generated CRDs
+	@find package/crds -name *.yaml -exec sed -i.sed -e '1,2d' {} \; || $(FAIL)
+	@find package/crds -name *.yaml.sed -delete || $(FAIL)
+	@$(OK) cleaned generated CRDs
+
+generate: crds.clean
+
 # Ensure a PR is ready for review.
 reviewable: generate lint
 	@go mod tidy
@@ -86,17 +88,14 @@ check-diff: reviewable
 	@git diff --quiet || $(FAIL)
 	@$(OK) branch is clean
 
-# # integration tests
-# e2e.run: test-integration
+# integration tests
+e2e.run: test-integration
 
-# # Run integration tests.
-# test-integration: $(KIND) $(KUBECTL)
-# 	@$(INFO) running integration tests using kind $(KIND_VERSION)
-# 	@$(ROOT_DIR)/cluster/local/integration_tests.sh || $(FAIL)
-# 	@$(OK) integration tests passed
-
-# go-integration: 
-# 	GO_TEST_FLAGS="-timeout 1h -v" GO_TAGS=integration $(MAKE) go.test.integration
+# Run integration tests.
+test-integration: $(KIND) $(KUBECTL) $(HELM3)
+	@$(INFO) running integration tests using kind $(KIND_VERSION)
+	@$(ROOT_DIR)/cluster/local/integration_tests.sh || $(FAIL)
+	@$(OK) integration tests passed
 
 # Update the submodules, such as the common build scripts.
 submodules:
@@ -111,45 +110,11 @@ run: go.build
 	@# To see other arguments that can be provided, run the command with --help instead
 	$(GO_OUT_DIR)/$(PROJECT_NAME) --debug
 
-# ====================================================================================
-# Stacks related targets
-
-# Initialize the stack package folder
-$(STACK_PACKAGE_REGISTRY):
-	@mkdir -p $(STACK_PACKAGE_REGISTRY)/resources
-	@touch $(STACK_PACKAGE_REGISTRY)/app.yaml $(STACK_PACKAGE_REGISTRY)/install.yaml
-
-build.artifacts: build-stack-package
-
-CRD_DIR=config/crd
-build-stack-package: $(STACK_PACKAGE_REGISTRY)
-# Copy CRDs over
-#
-# The reason this looks complicated is because it is
-# preserving the original crd filenames and changing
-# *.yaml to *.crd.yaml.
-#
-# An alternate and simpler-looking approach would
-# be to cat all of the files into a single crd.yaml,
-# but then we couldn't use per CRD metadata files.
-	@$(INFO) building stack package in $(STACK_PACKAGE)
-	@find $(CRD_DIR) -type f -name '*.yaml' | \
-		while read filename ; do mkdir -p $(STACK_PACKAGE_REGISTRY)/resources/$$(basename $${filename%_*});\
-		concise=$${filename#*_}; \
-		cat $$filename > \
-		$(STACK_PACKAGE_REGISTRY)/resources/$$( basename $${filename%_*} )/$$( basename $${concise/.yaml/.crd.yaml} ) \
-		; done
-	@cp -r $(STACK_PACKAGE_REGISTRY_SOURCE)/* $(STACK_PACKAGE_REGISTRY)
-
-clean: clean-stack-package
-
-clean-stack-package:
-	@rm -rf $(STACK_PACKAGE)
 
 manifests:
 	@$(INFO) Deprecated. Run make generate instead.
 
-.PHONY: cobertura reviewable submodules fallthrough run clean-stack-package build-stack-package manifests
+.PHONY: cobertura reviewable submodules fallthrough run manifests crds.clean
 
 # ====================================================================================
 # Special Targets
@@ -160,8 +125,6 @@ Crossplane Targets:
     reviewable            Ensure a PR is ready for review.
     submodules            Update the submodules, such as the common build scripts.
     run                   Run crossplane locally, out-of-cluster. Useful for development.
-    build-stack-package   Builds the stack package contents in the stack package directory (./$(STACK_PACKAGE))
-    clean-stack-package   Cleans out the generated stack package directory (./$(STACK_PACKAGE))
 
 endef
 # The reason CROSSPLANE_MAKE_HELP is used instead of CROSSPLANE_HELP is because the crossplane
