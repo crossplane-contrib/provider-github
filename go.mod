@@ -1,4 +1,4 @@
-module github.com/crossplane/provider-github
+module github.com/crossplane-contrib/provider-github
 
 go 1.13
 
