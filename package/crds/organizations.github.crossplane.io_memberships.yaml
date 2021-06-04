@@ -24,7 +24,7 @@ spec:
     categories:
     - crossplane
     - managed
-    - aws
+    - github
     kind: Membership
     listKind: MembershipList
     plural: memberships
