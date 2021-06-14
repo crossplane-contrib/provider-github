@@ -28,6 +28,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
 	"github.com/crossplane-contrib/provider-github/apis/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // GetConfig gets the config.
@@ -54,4 +55,22 @@ func NewClient(token string) *github.Client {
 	tc := oauth2.NewClient(ctx, ts)
 
 	return github.NewClient(tc)
+}
+
+// StringPtr converts the supplied string to a pointer to that string.
+func StringPtr(p string) *string { return &p }
+
+// StringValue converts the supplied pointer string to a string.
+func StringValue(v *string) string {
+	if v == nil {
+		return ""
+	}
+	return *v
+}
+
+// TimestampConverter converts *github.Timestamp into *metav1.Time
+func TimestampConverter(t *github.Timestamp) *metav1.Time {
+	return &metav1.Time{
+		Time: t.Time,
+	}
 }
