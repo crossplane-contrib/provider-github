@@ -1,0 +1,416 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.4
+  creationTimestamp: null
+  name: repositories.repositories.github.crossplane.io
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.atProvider.htmlUrl
+    name: URL
+    type: string
+  - JSONPath: .status.conditions[?(@.type=='Ready')].status
+    name: READY
+    type: string
+  - JSONPath: .status.conditions[?(@.type=='Synced')].status
+    name: SYNCED
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: AGE
+    type: date
+  group: repositories.github.crossplane.io
+  names:
+    categories:
+    - crossplane
+    - managed
+    - github
+    kind: Repository
+    listKind: RepositoryList
+    plural: repositories
+    singular: repository
+  scope: Cluster
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: A Repository is a managed resource that represents a GitHub Repository
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: RepositorySpec defines the desired state of a Repository.
+          properties:
+            deletionPolicy:
+              description: DeletionPolicy specifies what will happen to the underlying
+                external when this managed resource is deleted - either "Delete" or
+                "Orphan" the external resource. The "Delete" policy is the default
+                when no policy is specified.
+              enum:
+              - Orphan
+              - Delete
+              type: string
+            forProvider:
+              description: RepositoryParameters represents the status of a Repository.
+              properties:
+                allowMergeCommit:
+                  description: 'Either true to allow merging pull requests with a
+                    merge commit, or false to prevent merging pull requests with merge
+                    commits. Default: true'
+                  type: boolean
+                allowRebaseMerge:
+                  description: 'Either true to allow rebase-merging pull requests,
+                    or false to prevent rebase-merging. Default: true'
+                  type: boolean
+                allowSquashMerge:
+                  description: 'Either true to allow squash-merging pull requests,
+                    or false to prevent squash-merging. Default: true'
+                  type: boolean
+                archived:
+                  description: 'True to archive this repository. Note: You cannot
+                    unarchive repositories through the API.'
+                  type: boolean
+                autoInit:
+                  description: Pass true to create an initial commit with empty README.
+                  type: boolean
+                defaultBranch:
+                  description: Name of the default branch The branch must already
+                    exist in the repository.
+                  type: string
+                deleteBranchOnMerge:
+                  description: 'Either true to allow automatically deleting head branches
+                    when pull requests are merged, or false to prevent automatic deletion.
+                    Default: false'
+                  type: boolean
+                description:
+                  description: A short description of the repository.
+                  type: string
+                gitignoreTemplate:
+                  description: 'Desired language or platform .gitignore template to
+                    apply. Use the name of the template without the extension. Example:
+                    "Haskell".'
+                  type: string
+                hasDownloads:
+                  description: 'Either true to enable downloads for this repository
+                    or false to disable it. Default: true'
+                  type: boolean
+                hasIssues:
+                  description: 'Either true to enable issues for this repository or
+                    false to disable them. Default: true'
+                  type: boolean
+                hasPages:
+                  description: 'Either true to enable pages for this repository or
+                    false to disable it. Default: false'
+                  type: boolean
+                hasProjects:
+                  description: 'Either true to enable projects for this repository
+                    or false to disable them. Note: For organizations that has disabled
+                    repository projects, the default is false, and if you pass true,
+                    the API returns an error. Default: true'
+                  type: boolean
+                hasWiki:
+                  description: 'Either true to enable the wiki for this repository
+                    or false to disable it. Default: true'
+                  type: boolean
+                homepage:
+                  description: A URL with more information about the repository.
+                  type: string
+                isTemplate:
+                  description: 'Either true to make this repo available as a template
+                    repository or false to prevent it. Default: false'
+                  type: boolean
+                licenseTemplate:
+                  description: 'Choose an open source license template that best suits
+                    your needs, and then use the license keyword as the license template
+                    string. Example: "mpl-2.0".'
+                  type: string
+                name:
+                  description: The name of the repository.
+                  type: string
+                org:
+                  description: The name of the organization that owns the Repository.
+                  type: string
+                owner:
+                  description: The name of the Repository owner. The owner can be
+                    an organization or an user.
+                  type: string
+                private:
+                  description: 'Whether the repository is private. Must match with
+                    Visibility field. Default: false'
+                  type: boolean
+                teamId:
+                  description: The id of the team that will be granted access to this
+                    repository. This is only valid when creating a repository in an
+                    organization.
+                  format: int64
+                  type: integer
+                visibility:
+                  description: Can be public or private. You cannot have private and
+                    visibility fields contradictory to each other. If your organization
+                    is associated with an enterprise account using GitHub Enterprise
+                    Cloud or GitHub Enterprise  Server 2.20+, visibility can also
+                    be internal.
+                  enum:
+                  - public
+                  - private
+                  type: string
+              required:
+              - name
+              - owner
+              type: object
+            providerConfigRef:
+              description: ProviderConfigReference specifies how the provider that
+                will be used to create, observe, update, and delete this managed resource
+                should be configured.
+              properties:
+                name:
+                  description: Name of the referenced object.
+                  type: string
+              required:
+              - name
+              type: object
+            providerRef:
+              description: 'ProviderReference specifies the provider that will be
+                used to create, observe, update, and delete this managed resource.
+                Deprecated: Please use ProviderConfigReference, i.e. `providerConfigRef`'
+              properties:
+                name:
+                  description: Name of the referenced object.
+                  type: string
+              required:
+              - name
+              type: object
+            writeConnectionSecretToRef:
+              description: WriteConnectionSecretToReference specifies the namespace
+                and name of a Secret to which any connection details for this managed
+                resource should be written. Connection details frequently include
+                the endpoint, username, and password required to connect to the managed
+                resource.
+              properties:
+                name:
+                  description: Name of the secret.
+                  type: string
+                namespace:
+                  description: Namespace of the secret.
+                  type: string
+              required:
+              - name
+              - namespace
+              type: object
+          required:
+          - forProvider
+          type: object
+        status:
+          description: RepositoryStatus represents the observed state of a Repository.
+          properties:
+            atProvider:
+              description: RepositoryObservation is the representation of the current
+                state that is observed
+              properties:
+                archiveUrl:
+                  type: string
+                assigneesUrl:
+                  type: string
+                blobsUrl:
+                  type: string
+                branchesUrl:
+                  type: string
+                cloneUrl:
+                  type: string
+                collaboratorsUrl:
+                  type: string
+                commentsUrl:
+                  type: string
+                commitsUrl:
+                  type: string
+                compareUrl:
+                  type: string
+                contentsUrl:
+                  type: string
+                contributorsUrl:
+                  type: string
+                createdAt:
+                  description: Time that the Repository was created.
+                  format: date-time
+                  type: string
+                deploymentsUrl:
+                  type: string
+                disabled:
+                  description: Whether the repository is disabled.
+                  type: boolean
+                downloadsUrl:
+                  type: string
+                eventsUrl:
+                  type: string
+                fork:
+                  description: Whether the repository is a fork.
+                  type: boolean
+                forksCount:
+                  type: integer
+                forksUrl:
+                  type: string
+                fullName:
+                  description: The repository fullname The format is {owner}/{repository_name}
+                  type: string
+                gitCommitsUrl:
+                  type: string
+                gitRefsUrl:
+                  type: string
+                gitTagsUrl:
+                  type: string
+                gitUrl:
+                  type: string
+                hooksUrl:
+                  type: string
+                htmlUrl:
+                  type: string
+                id:
+                  description: The ID of the Repository
+                  format: int64
+                  type: integer
+                issueCommentUrl:
+                  type: string
+                issueEventsUrl:
+                  type: string
+                issuesUrl:
+                  type: string
+                keysUrl:
+                  type: string
+                labelsUrl:
+                  type: string
+                language:
+                  description: Main programming language of the Repository.
+                  type: string
+                languagesUrl:
+                  type: string
+                mergesUrl:
+                  type: string
+                milestonesUrl:
+                  type: string
+                mirrorUrl:
+                  type: string
+                name:
+                  description: The name of the repository returned by the API. This
+                    field is on the Observation struct to enable update in the repository
+                    name
+                  type: string
+                networkCount:
+                  type: integer
+                nodeId:
+                  description: The NodeID of the Repository
+                  type: string
+                notificationsUrl:
+                  type: string
+                openIssuesCount:
+                  type: integer
+                permissions:
+                  additionalProperties:
+                    type: boolean
+                  type: object
+                pullsUrl:
+                  type: string
+                pushedAt:
+                  description: Time that the Repository was pushed.
+                  format: date-time
+                  type: string
+                releasesUrl:
+                  type: string
+                size:
+                  type: integer
+                sshUrl:
+                  type: string
+                stargazersCount:
+                  type: integer
+                stargazersUrl:
+                  type: string
+                statusesUrl:
+                  type: string
+                subscribersCount:
+                  type: integer
+                subscribersUrl:
+                  type: string
+                subscriptionUrl:
+                  type: string
+                svnUrl:
+                  type: string
+                tagsUrl:
+                  type: string
+                teamsUrl:
+                  type: string
+                topics:
+                  items:
+                    type: string
+                  type: array
+                treesUrl:
+                  type: string
+                updatedAt:
+                  description: Time that the Repository was updated.
+                  format: date-time
+                  type: string
+                url:
+                  type: string
+                watchersCount:
+                  type: integer
+              required:
+              - name
+              type: object
+            conditions:
+              description: Conditions of the resource.
+              items:
+                description: A Condition that may apply to a resource.
+                properties:
+                  lastTransitionTime:
+                    description: LastTransitionTime is the last time this condition
+                      transitioned from one status to another.
+                    format: date-time
+                    type: string
+                  message:
+                    description: A Message containing details about this condition's
+                      last transition from one status to another, if any.
+                    type: string
+                  reason:
+                    description: A Reason for this condition's last transition from
+                      one status to another.
+                    type: string
+                  status:
+                    description: Status of this condition; is it currently True, False,
+                      or Unknown?
+                    type: string
+                  type:
+                    description: Type of this condition. At most one of each condition
+                      type may apply to a resource at any point in time.
+                    type: string
+                required:
+                - lastTransitionTime
+                - reason
+                - status
+                - type
+                type: object
+              type: array
+          required:
+          - atProvider
+          type: object
+      required:
+      - spec
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
