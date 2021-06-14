@@ -48,7 +48,7 @@ func IsUpToDate(rp *v1alpha1.RepositoryParameters, observed *github.Repository) 
 }
 
 // GenerateRepository produces *github.Repository from RepositoryParameters
-func GenerateRepository(rp v1alpha1.RepositoryParameters, r *github.Repository) {
+func GenerateRepository(rp v1alpha1.RepositoryParameters, r *github.Repository) { // nolint:gocyclo
 	if len(rp.Name) != 0 {
 		r.Name = ghclient.StringPtr(rp.Name)
 	}
@@ -184,7 +184,7 @@ func GenerateObservation(r github.Repository) v1alpha1.RepositoryObservation {
 
 // LateInitialize fills the empty fields of RepositoryParameters if the corresponding
 // fields are given in Repository.
-func LateInitialize(rp *v1alpha1.RepositoryParameters, r github.Repository) {
+func LateInitialize(rp *v1alpha1.RepositoryParameters, r github.Repository) { // nolint:gocyclo
 	if rp.Organization == nil && r.Organization.Login != nil {
 		rp.Organization = r.Organization.Login
 	}
