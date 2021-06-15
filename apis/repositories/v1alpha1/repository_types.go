@@ -162,95 +162,95 @@ type RepositorySpec struct {
 // RepositoryObservation is the representation of the current state that is observed
 type RepositoryObservation struct {
 	// The ID of the Repository
-	ID *int64 `json:"id,omitempty"`
+	ID int64 `json:"id,omitempty"`
 
 	// The NodeID of the Repository
-	NodeID *string `json:"nodeId,omitempty"`
+	NodeID string `json:"nodeId,omitempty"`
 
 	// The repository fullname
 	// The format is {owner}/{repository_name}
-	FullName *string `json:"fullName,omitempty"`
+	FullName string `json:"fullName,omitempty"`
 
 	// The name of the repository returned by the API.
 	// This field is on the Observation struct to enable update in the repository name
-	Name *string `json:"name"`
+	Name string `json:"name"`
 
 	// TODO: Owner
 
 	// Related Repository URLs
 
-	URL              *string `json:"url,omitempty"`
-	ArchiveURL       *string `json:"archiveUrl,omitempty"`
-	AssigneesURL     *string `json:"assigneesUrl,omitempty"`
-	BlobsURL         *string `json:"blobsUrl,omitempty"`
-	BranchesURL      *string `json:"branchesUrl,omitempty"`
-	CollaboratorsURL *string `json:"collaboratorsUrl,omitempty"`
-	CommentsURL      *string `json:"commentsUrl,omitempty"`
-	CommitsURL       *string `json:"commitsUrl,omitempty"`
-	CompareURL       *string `json:"compareUrl,omitempty"`
-	ContentsURL      *string `json:"contentsUrl,omitempty"`
-	ContributorsURL  *string `json:"contributorsUrl,omitempty"`
-	DeploymentsURL   *string `json:"deploymentsUrl,omitempty"`
-	DownloadsURL     *string `json:"downloadsUrl,omitempty"`
-	EventsURL        *string `json:"eventsUrl,omitempty"`
-	ForksURL         *string `json:"forksUrl,omitempty"`
-	GitCommitsURL    *string `json:"gitCommitsUrl,omitempty"`
-	GitRefsURL       *string `json:"gitRefsUrl,omitempty"`
-	GitTagsURL       *string `json:"gitTagsUrl,omitempty"`
-	HooksURL         *string `json:"hooksUrl,omitempty"`
-	IssueCommentURL  *string `json:"issueCommentUrl,omitempty"`
-	IssueEventsURL   *string `json:"issueEventsUrl,omitempty"`
-	IssuesURL        *string `json:"issuesUrl,omitempty"`
-	KeysURL          *string `json:"keysUrl,omitempty"`
-	LabelsURL        *string `json:"labelsUrl,omitempty"`
-	LanguagesURL     *string `json:"languagesUrl,omitempty"`
-	MergesURL        *string `json:"mergesUrl,omitempty"`
-	MilestonesURL    *string `json:"milestonesUrl,omitempty"`
-	NotificationsURL *string `json:"notificationsUrl,omitempty"`
-	PullsURL         *string `json:"pullsUrl,omitempty"`
-	ReleasesURL      *string `json:"releasesUrl,omitempty"`
-	StargazersURL    *string `json:"stargazersUrl,omitempty"`
-	StatusesURL      *string `json:"statusesUrl,omitempty"`
-	SubscribersURL   *string `json:"subscribersUrl,omitempty"`
-	SubscriptionURL  *string `json:"subscriptionUrl,omitempty"`
-	TagsURL          *string `json:"tagsUrl,omitempty"`
-	TreesURL         *string `json:"treesUrl,omitempty"`
-	TeamsURL         *string `json:"teamsUrl,omitempty"`
-	HTMLURL          *string `json:"htmlUrl,omitempty"`
-	CloneURL         *string `json:"cloneUrl,omitempty"`
-	GitURL           *string `json:"gitUrl,omitempty"`
-	MirrorURL        *string `json:"mirrorUrl,omitempty"`
-	SSHURL           *string `json:"sshUrl,omitempty"`
-	SVNURL           *string `json:"svnUrl,omitempty"`
+	URL              string `json:"url,omitempty"`
+	ArchiveURL       string `json:"archiveUrl,omitempty"`
+	AssigneesURL     string `json:"assigneesUrl,omitempty"`
+	BlobsURL         string `json:"blobsUrl,omitempty"`
+	BranchesURL      string `json:"branchesUrl,omitempty"`
+	CollaboratorsURL string `json:"collaboratorsUrl,omitempty"`
+	CommentsURL      string `json:"commentsUrl,omitempty"`
+	CommitsURL       string `json:"commitsUrl,omitempty"`
+	CompareURL       string `json:"compareUrl,omitempty"`
+	ContentsURL      string `json:"contentsUrl,omitempty"`
+	ContributorsURL  string `json:"contributorsUrl,omitempty"`
+	DeploymentsURL   string `json:"deploymentsUrl,omitempty"`
+	DownloadsURL     string `json:"downloadsUrl,omitempty"`
+	EventsURL        string `json:"eventsUrl,omitempty"`
+	ForksURL         string `json:"forksUrl,omitempty"`
+	GitCommitsURL    string `json:"gitCommitsUrl,omitempty"`
+	GitRefsURL       string `json:"gitRefsUrl,omitempty"`
+	GitTagsURL       string `json:"gitTagsUrl,omitempty"`
+	HooksURL         string `json:"hooksUrl,omitempty"`
+	IssueCommentURL  string `json:"issueCommentUrl,omitempty"`
+	IssueEventsURL   string `json:"issueEventsUrl,omitempty"`
+	IssuesURL        string `json:"issuesUrl,omitempty"`
+	KeysURL          string `json:"keysUrl,omitempty"`
+	LabelsURL        string `json:"labelsUrl,omitempty"`
+	LanguagesURL     string `json:"languagesUrl,omitempty"`
+	MergesURL        string `json:"mergesUrl,omitempty"`
+	MilestonesURL    string `json:"milestonesUrl,omitempty"`
+	NotificationsURL string `json:"notificationsUrl,omitempty"`
+	PullsURL         string `json:"pullsUrl,omitempty"`
+	ReleasesURL      string `json:"releasesUrl,omitempty"`
+	StargazersURL    string `json:"stargazersUrl,omitempty"`
+	StatusesURL      string `json:"statusesUrl,omitempty"`
+	SubscribersURL   string `json:"subscribersUrl,omitempty"`
+	SubscriptionURL  string `json:"subscriptionUrl,omitempty"`
+	TagsURL          string `json:"tagsUrl,omitempty"`
+	TreesURL         string `json:"treesUrl,omitempty"`
+	TeamsURL         string `json:"teamsUrl,omitempty"`
+	HTMLURL          string `json:"htmlUrl,omitempty"`
+	CloneURL         string `json:"cloneUrl,omitempty"`
+	GitURL           string `json:"gitUrl,omitempty"`
+	MirrorURL        string `json:"mirrorUrl,omitempty"`
+	SSHURL           string `json:"sshUrl,omitempty"`
+	SVNURL           string `json:"svnUrl,omitempty"`
 
 	// Related counters of the repository.
 
-	ForksCount       *int `json:"forksCount,omitempty"`
-	NetworkCount     *int `json:"networkCount,omitempty"`
-	OpenIssuesCount  *int `json:"openIssuesCount,omitempty"`
-	StargazersCount  *int `json:"stargazersCount,omitempty"`
-	SubscribersCount *int `json:"subscribersCount,omitempty"`
-	WatchersCount    *int `json:"watchersCount,omitempty"`
+	ForksCount       int `json:"forksCount,omitempty"`
+	NetworkCount     int `json:"networkCount,omitempty"`
+	OpenIssuesCount  int `json:"openIssuesCount,omitempty"`
+	StargazersCount  int `json:"stargazersCount,omitempty"`
+	SubscribersCount int `json:"subscribersCount,omitempty"`
+	WatchersCount    int `json:"watchersCount,omitempty"`
 
 	// Time that the Repository was created.
-	CreatedAt *metav1.Time `json:"createdAt,omitempty"`
+	CreatedAt metav1.Time `json:"createdAt,omitempty"`
 
 	// Time that the Repository was pushed.
-	PushedAt *metav1.Time `json:"pushedAt,omitempty"`
+	PushedAt metav1.Time `json:"pushedAt,omitempty"`
 
 	// Time that the Repository was updated.
-	UpdatedAt *metav1.Time `json:"updatedAt,omitempty"`
+	UpdatedAt metav1.Time `json:"updatedAt,omitempty"`
 
 	// Main programming language of the Repository.
-	Language *string `json:"language,omitempty"`
+	Language string `json:"language,omitempty"`
 
 	// Whether the repository is a fork.
-	Fork   *bool    `json:"fork,omitempty"`
-	Size   *int     `json:"size,omitempty"`
+	Fork   bool     `json:"fork,omitempty"`
+	Size   int      `json:"size,omitempty"`
 	Topics []string `json:"topics,omitempty"`
 
 	// Whether the repository is disabled.
-	Disabled    *bool           `json:"disabled,omitempty"`
+	Disabled    bool            `json:"disabled,omitempty"`
 	Permissions map[string]bool `json:"permissions,omitempty"`
 
 	// TODOs below are overly verbose

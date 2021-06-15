@@ -69,8 +69,32 @@ func StringValue(v *string) string {
 }
 
 // TimestampConverter converts *github.Timestamp into *metav1.Time
-func TimestampConverter(t *github.Timestamp) *metav1.Time {
-	return &metav1.Time{
+func TimestampConverter(t *github.Timestamp) metav1.Time {
+	return metav1.Time{
 		Time: t.Time,
 	}
+}
+
+// Int64Value converts the supplied pointer int64 to a int64.
+func Int64Value(i *int64) int64 {
+	if i == nil {
+		return 0
+	}
+	return *i
+}
+
+// IntValue converts the supplied pointer int to a int.
+func IntValue(i *int) int {
+	if i == nil {
+		return 0
+	}
+	return *i
+}
+
+// BoolValue converts the supplied pointer bool to a bool.
+func BoolValue(b *bool) bool {
+	if b == nil {
+		return false
+	}
+	return *b
 }

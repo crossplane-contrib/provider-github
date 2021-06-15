@@ -85,7 +85,7 @@ func (e *external) Observe(ctx context.Context, mgd resource.Managed) (managed.E
 		ctx,
 		cr.Spec.ForProvider.Owner,
 		cr.Spec.ForProvider.Name,
-		ghclient.StringValue(cr.Status.AtProvider.Name),
+		cr.Status.AtProvider.Name,
 	)
 	if err != nil {
 		return managed.ExternalObservation{
@@ -149,7 +149,7 @@ func (e *external) Update(ctx context.Context, mgd resource.Managed) (managed.Ex
 		ctx,
 		cr.Spec.ForProvider.Owner,
 		cr.Spec.ForProvider.Name,
-		ghclient.StringValue(cr.Status.AtProvider.Name),
+		cr.Status.AtProvider.Name,
 	)
 	if err != nil {
 		return managed.ExternalUpdate{}, errors.Wrap(err, errGetRepository)
@@ -160,7 +160,7 @@ func (e *external) Update(ctx context.Context, mgd resource.Managed) (managed.Ex
 	_, _, err = e.gh.Repositories.Edit(
 		ctx,
 		cr.Spec.ForProvider.Owner,
-		*cr.Status.AtProvider.Name,
+		cr.Status.AtProvider.Name,
 		r,
 	)
 	return managed.ExternalUpdate{}, errors.Wrap(err, errUpdateRepository)
