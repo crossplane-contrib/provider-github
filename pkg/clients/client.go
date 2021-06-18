@@ -70,6 +70,9 @@ func StringValue(v *string) string {
 
 // TimestampConverter converts *github.Timestamp into *metav1.Time
 func TimestampConverter(t *github.Timestamp) metav1.Time {
+	if t == nil {
+		return metav1.Time{}
+	}
 	return metav1.Time{
 		Time: t.Time,
 	}

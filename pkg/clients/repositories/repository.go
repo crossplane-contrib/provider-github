@@ -14,6 +14,8 @@ limitations under the License.
 package repositories
 
 import (
+	"context"
+
 	"github.com/crossplane-contrib/provider-github/apis/repositories/v1alpha1"
 	ghclient "github.com/crossplane-contrib/provider-github/pkg/clients"
 	"github.com/google/go-cmp/cmp"
@@ -26,6 +28,22 @@ import (
 const (
 	errCheckUpToDate = "unable to determine if external resource is up to date"
 )
+
+// Service defines the Repositories operations
+type Service interface {
+	Create(ctx context.Context, org string, repo *github.Repository) (*github.Repository, *github.Response, error)
+	Get(ctx context.Context, owner, repo string) (*github.Repository, *github.Response, error)
+	Edit(ctx context.Context, owner, repo string, repository *github.Repository) (*github.Repository, *github.Response, error)
+	Delete(ctx context.Context, owner, repo string) (*github.Response, error)
+}
+
+// NewService creates a new Service based on the *github.Client
+// returned by the NewClient SDK method.
+func NewService(token string) *Service {
+	c := ghclient.NewClient(token)
+	r := Service(c.Repositories)
+	return &r
+}
 
 // IsUpToDate checks whether Repository is configured with given RepositoryParameters.
 func IsUpToDate(rp *v1alpha1.RepositoryParameters, observed *github.Repository) (bool, error) {
@@ -116,7 +134,7 @@ func GenerateRepository(rp v1alpha1.RepositoryParameters, r *github.Repository) 
 
 // GenerateObservation produces RepositoryObservation object from *github.Repository object.
 func GenerateObservation(r github.Repository) v1alpha1.RepositoryObservation {
-	return v1alpha1.RepositoryObservation{
+	o := v1alpha1.RepositoryObservation{
 		ID:               ghclient.Int64Value(r.ID),
 		NodeID:           ghclient.StringValue(r.NodeID),
 		FullName:         ghclient.StringValue(r.FullName),
@@ -177,8 +195,15 @@ func GenerateObservation(r github.Repository) v1alpha1.RepositoryObservation {
 		Size:             ghclient.IntValue(r.Size),
 		Disabled:         ghclient.BoolValue(r.Disabled),
 		Topics:           r.Topics,
-		Permissions:      *r.Permissions,
 	}
+	if r.Permissions != nil {
+		o.Permissions = map[string]bool{}
+		for k, v := range *r.Permissions {
+			o.Permissions[k] = v
+		}
+	}
+
+	return o
 }
 
 // LateInitialize fills the empty fields of RepositoryParameters if the corresponding
