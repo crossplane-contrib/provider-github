@@ -45,7 +45,12 @@ func SetupRepository(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimite
 		For(&v1alpha1.Repository{}).
 		Complete(managed.NewReconciler(mgr,
 			resource.ManagedKind(v1alpha1.RepositoryGroupVersionKind),
-			managed.WithExternalConnecter(&connector{client: mgr.GetClient(), newClientFn: ghclient.NewClient}),
+			managed.WithExternalConnecter(
+				&connector{
+					client:      mgr.GetClient(),
+					newClientFn: repositories.NewService,
+				},
+			),
 			managed.WithConnectionPublishers(),
 			managed.WithReferenceResolver(managed.NewAPISimpleReferenceResolver(mgr.GetClient())),
 			managed.WithInitializers(managed.NewDefaultProviderConfig(mgr.GetClient())),
@@ -55,7 +60,7 @@ func SetupRepository(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimite
 
 type connector struct {
 	client      client.Client
-	newClientFn func(string) *github.Client
+	newClientFn func(string) *repositories.Service
 }
 
 func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
@@ -67,11 +72,11 @@ func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.E
 	if err != nil {
 		return nil, err
 	}
-	return &external{c.newClientFn(string(cfg)), c.client}, nil
+	return &external{*c.newClientFn(string(cfg)), c.client}, nil
 }
 
 type external struct {
-	gh     *github.Client
+	gh     repositories.Service
 	client client.Client
 }
 
@@ -81,25 +86,28 @@ func (e *external) Observe(ctx context.Context, mgd resource.Managed) (managed.E
 		return managed.ExternalObservation{}, errors.New(errUnexpectedObject)
 	}
 
-	r, err := e.GetRepository(
+	r, res, err := e.GetRepository(
 		ctx,
 		cr.Spec.ForProvider.Owner,
 		cr.Spec.ForProvider.Name,
 		cr.Status.AtProvider.Name,
 	)
 	if err != nil {
-		return managed.ExternalObservation{
-			ResourceExists: false,
-		}, nil
+		if res.StatusCode == 404 {
+			return managed.ExternalObservation{}, nil
+		}
+		return managed.ExternalObservation{}, errors.Wrap(err, errGetRepository)
 	}
 
 	// Import repository if already exists
+	lateInit := false
 	currentSpec := cr.Spec.ForProvider.DeepCopy()
 	repositories.LateInitialize(&cr.Spec.ForProvider, *r)
 	if !cmp.Equal(currentSpec, &cr.Spec.ForProvider) {
 		if err := e.client.Update(ctx, cr); err != nil {
 			return managed.ExternalObservation{}, errors.Wrap(err, errKubeUpdateRepository)
 		}
+		lateInit = true
 	}
 
 	cr.Status.SetConditions(xpv1.Available())
@@ -111,8 +119,9 @@ func (e *external) Observe(ctx context.Context, mgd resource.Managed) (managed.E
 	}
 
 	return managed.ExternalObservation{
-		ResourceUpToDate: upToDate,
-		ResourceExists:   true,
+		ResourceUpToDate:        upToDate,
+		ResourceExists:          true,
+		ResourceLateInitialized: lateInit,
 	}, nil
 }
 
@@ -124,8 +133,7 @@ func (e *external) Create(ctx context.Context, mgd resource.Managed) (managed.Ex
 
 	repo := &github.Repository{}
 	repositories.GenerateRepository(cr.Spec.ForProvider, repo)
-
-	_, _, err := e.gh.Repositories.Create(
+	_, _, err := e.gh.Create(
 		ctx,
 		ghclient.StringValue(cr.Spec.ForProvider.Organization),
 		repo,
@@ -145,7 +153,7 @@ func (e *external) Update(ctx context.Context, mgd resource.Managed) (managed.Ex
 		return managed.ExternalUpdate{}, errors.New(errUnexpectedObject)
 	}
 
-	r, err := e.GetRepository(
+	r, _, err := e.GetRepository(
 		ctx,
 		cr.Spec.ForProvider.Owner,
 		cr.Spec.ForProvider.Name,
@@ -157,7 +165,7 @@ func (e *external) Update(ctx context.Context, mgd resource.Managed) (managed.Ex
 
 	repositories.GenerateRepository(cr.Spec.ForProvider, r)
 
-	_, _, err = e.gh.Repositories.Edit(
+	_, _, err = e.gh.Edit(
 		ctx,
 		cr.Spec.ForProvider.Owner,
 		cr.Status.AtProvider.Name,
@@ -172,7 +180,7 @@ func (e *external) Delete(ctx context.Context, mgd resource.Managed) error {
 		return errors.New(errUnexpectedObject)
 	}
 
-	_, err := e.gh.Repositories.Delete(ctx,
+	_, err := e.gh.Delete(ctx,
 		cr.Spec.ForProvider.Owner,
 		cr.Spec.ForProvider.Name,
 	)
@@ -182,14 +190,14 @@ func (e *external) Delete(ctx context.Context, mgd resource.Managed) error {
 // GetRepository makes API calls to get the Repository.
 // If using the Spec name the repository is not found, a second attempt
 // is made with the status name. This is useful when updating the Repository name.
-func (e *external) GetRepository(ctx context.Context, owner, specName, statusName string) (*github.Repository, error) {
-	r, _, err := e.gh.Repositories.Get(ctx, owner, specName)
+func (e *external) GetRepository(ctx context.Context, owner, specName, statusName string) (*github.Repository, *github.Response, error) {
+	repo, res, err := e.gh.Get(ctx, owner, specName)
 	if err != nil {
-		r, _, err = e.gh.Repositories.Get(ctx, owner, statusName)
+		repo, res, err = e.gh.Get(ctx, owner, statusName)
 		if err != nil {
-			return nil, err
+			return nil, res, err
 		}
-		return r, nil
+		return repo, res, nil
 	}
-	return r, nil
+	return repo, res, nil
 }
