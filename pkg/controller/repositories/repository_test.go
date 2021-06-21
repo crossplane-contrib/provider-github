@@ -76,7 +76,7 @@ func TestObserve(t *testing.T) {
 		want   want
 	}{
 		"ResourceIsNotRepository": {
-			reason: "Should return an error resource is not Repository",
+			reason: "Must return an error resource is not Repository",
 			args: args{
 				mg: unexpectedObject,
 			},
@@ -86,7 +86,7 @@ func TestObserve(t *testing.T) {
 			},
 		},
 		"CannotGetRepository": {
-			reason: "Should return an error if GET repository fails and the error is different than 404",
+			reason: "Must return an error if GET repository fails and the error is different than 404",
 			args: args{
 				mg: newRepository(),
 				github: &fake.MockService{
@@ -106,8 +106,8 @@ func TestObserve(t *testing.T) {
 				err: errors.Wrap(errBoom, errGetRepository),
 			},
 		},
-		"ShouldNotReturnError404": {
-			reason: "Should not return an error if GET repository returns 404 status code",
+		"MustNotReturnError404": {
+			reason: "Must not return an error if GET repository returns 404 status code",
 			args: args{
 				mg: newRepository(),
 				github: &fake.MockService{
@@ -128,7 +128,7 @@ func TestObserve(t *testing.T) {
 			},
 		},
 		"forProviderUpdateFailed": {
-			reason: "Should return an error if forProvider update fails",
+			reason: "Must return an error if forProvider update fails",
 			args: args{
 				kube: &test.MockClient{
 					MockUpdate: func(ctx context.Context, obj client.Object, opts ...client.UpdateOption) error {
@@ -159,7 +159,7 @@ func TestObserve(t *testing.T) {
 			},
 		},
 		"forProviderUpdateSuccessful": {
-			reason: "Should fill the forProvider struct if it is empty",
+			reason: "Must fill the forProvider struct if it is empty",
 			args: args{
 				kube: &test.MockClient{
 					MockUpdate: func(ctx context.Context, obj client.Object, opts ...client.UpdateOption) error {
@@ -191,7 +191,7 @@ func TestObserve(t *testing.T) {
 			},
 		},
 		"RepositoryIsNotUpToDate": {
-			reason: "Should return ResourceUpToDate as false if Repository is outdated",
+			reason: "Must return ResourceUpToDate as false if Repository is outdated",
 			args: args{
 				mg: newRepository(
 					withIssues(fakeTrue),
@@ -219,7 +219,7 @@ func TestObserve(t *testing.T) {
 			},
 		},
 		"RepositoryIsUpToDate": {
-			reason: "Should return ResourceUpToDate as false if Repository is outdated",
+			reason: "Must return ResourceUpToDate as false if Repository is outdated",
 			args: args{
 				mg: newRepository(
 					withIssues(fakeFalse),
@@ -277,7 +277,7 @@ func TestCreate(t *testing.T) {
 		want   want
 	}{
 		"ResourceIsNotRepository": {
-			reason: "Should return an error resource is not Repository",
+			reason: "Must return an error resource is not Repository",
 			args: args{
 				mg: unexpectedObject,
 			},
@@ -287,7 +287,7 @@ func TestCreate(t *testing.T) {
 			},
 		},
 		"CreationFailed": {
-			reason: "Should return an error if the repository creation fails",
+			reason: "Must return an error if the repository creation fails",
 			args: args{
 				github: &fake.MockService{
 					MockCreate: func(ctx context.Context, org string, repo *github.Repository) (*github.Repository, *github.Response, error) {
@@ -304,7 +304,7 @@ func TestCreate(t *testing.T) {
 			},
 		},
 		"Success": {
-			reason: "Should not return an error if everything goes well",
+			reason: "Must not return an error if everything goes well",
 			args: args{
 				github: &fake.MockService{
 					MockCreate: func(ctx context.Context, org string, repo *github.Repository) (*github.Repository, *github.Response, error) {
@@ -350,7 +350,7 @@ func TestUpdate(t *testing.T) {
 		want   want
 	}{
 		"ResourceIsNotRepository": {
-			reason: "Should return an error resource is not Repository",
+			reason: "Must return an error resource is not Repository",
 			args: args{
 				mg: unexpectedObject,
 			},
@@ -360,7 +360,7 @@ func TestUpdate(t *testing.T) {
 			},
 		},
 		"CannotGetRepository": {
-			reason: "Should return an error if GET repository fails",
+			reason: "Must return an error if GET repository fails",
 			args: args{
 				mg: newRepository(),
 				github: &fake.MockService{
@@ -381,7 +381,7 @@ func TestUpdate(t *testing.T) {
 			},
 		},
 		"CannotEditRepository": {
-			reason: "Should return an error if update repository fails",
+			reason: "Must return an error if update repository fails",
 			args: args{
 				mg: newRepository(),
 				github: &fake.MockService{
@@ -412,7 +412,7 @@ func TestUpdate(t *testing.T) {
 			},
 		},
 		"Success": {
-			reason: "Should not return an error if everything goes well",
+			reason: "Must not return an error if everything goes well",
 			args: args{
 				github: &fake.MockService{
 					MockGet: func(ctx context.Context, owner string, repo string) (*github.Repository, *github.Response, error) {
@@ -467,7 +467,7 @@ func TestDelete(t *testing.T) {
 		want   want
 	}{
 		"ResourceIsNotRepository": {
-			reason: "Should return an error resource is not Repository",
+			reason: "Must return an error resource is not Repository",
 			args: args{
 				mg: unexpectedObject,
 			},
@@ -476,7 +476,7 @@ func TestDelete(t *testing.T) {
 			},
 		},
 		"DeleteFailed": {
-			reason: "Should return error if DeleteRepository fails",
+			reason: "Must return error if DeleteRepository fails",
 			args: args{
 				mg: newRepository(),
 				github: &fake.MockService{
@@ -491,7 +491,7 @@ func TestDelete(t *testing.T) {
 			},
 		},
 		"Success": {
-			reason: "Should not fail if all calls succeed",
+			reason: "Must not fail if all calls succeed",
 			args: args{
 				mg: newRepository(),
 				github: &fake.MockService{
@@ -538,7 +538,7 @@ func TestGetRepository(t *testing.T) {
 		want   want
 	}{
 		"GetRepositoryFailed": {
-			reason: "Should return an error if both get tries fails",
+			reason: "Must return an error if both get tries fails",
 			args: args{
 				owner:      "sample",
 				specName:   "sample",
@@ -558,7 +558,7 @@ func TestGetRepository(t *testing.T) {
 			},
 		},
 		"GetRepositoryWithSpecName": {
-			reason: "Should successfully return an repository when using specName in the GET",
+			reason: "Must successfully return an repository when using specName in the GET",
 			args: args{
 				owner:      "sample",
 				specName:   "sample",
@@ -578,7 +578,7 @@ func TestGetRepository(t *testing.T) {
 			},
 		},
 		"GetRepositoryWithStatusName": {
-			reason: "Should successfully return an repository when using statusName in the GET",
+			reason: "Must successfully return an repository when using statusName in the GET",
 			args: args{
 				owner:      "sample",
 				specName:   "sample",

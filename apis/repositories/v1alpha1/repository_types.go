@@ -22,7 +22,7 @@ import (
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 )
 
-// RepositoryParameters represents the status of a Repository.
+// RepositoryParameters defines the desired state of a GitHub Repository.
 type RepositoryParameters struct {
 	// The name of the Repository owner.
 	// The owner can be an organization or an user.

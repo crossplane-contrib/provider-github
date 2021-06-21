@@ -51,22 +51,23 @@ func IsUpToDate(rp *v1alpha1.RepositoryParameters, observed *github.Repository) 
 	if err != nil {
 		return true, errors.Wrap(err, errCheckUpToDate)
 	}
-	desired, ok := generated.(*github.Repository)
+	clone, ok := generated.(*github.Repository)
 	if !ok {
 		return true, errors.New(errCheckUpToDate)
 	}
 
-	GenerateRepository(*rp, desired)
+	desired := OverrideParameters(*rp, *clone)
 
 	return cmp.Equal(
 		desired,
-		observed,
+		*observed,
 		cmpopts.IgnoreFields(github.Repository{}, "AutoInit"),
 	), nil
 }
 
-// GenerateRepository produces *github.Repository from RepositoryParameters
-func GenerateRepository(rp v1alpha1.RepositoryParameters, r *github.Repository) { // nolint:gocyclo
+// OverrideParameters override the parameters in github.Repository
+// that are defined in RepositoryParameters
+func OverrideParameters(rp v1alpha1.RepositoryParameters, r github.Repository) github.Repository { // nolint:gocyclo
 	if len(rp.Name) != 0 {
 		r.Name = ghclient.StringPtr(rp.Name)
 	}
@@ -130,9 +131,10 @@ func GenerateRepository(rp v1alpha1.RepositoryParameters, r *github.Repository) 
 	if rp.Archived != nil {
 		r.Archived = rp.Archived
 	}
+	return r
 }
 
-// GenerateObservation produces RepositoryObservation object from *github.Repository object.
+// GenerateObservation produces RepositoryObservation object from github.Repository object.
 func GenerateObservation(r github.Repository) v1alpha1.RepositoryObservation {
 	o := v1alpha1.RepositoryObservation{
 		ID:               ghclient.Int64Value(r.ID),
@@ -187,9 +189,9 @@ func GenerateObservation(r github.Repository) v1alpha1.RepositoryObservation {
 		StargazersCount:  ghclient.IntValue(r.StargazersCount),
 		SubscribersCount: ghclient.IntValue(r.SubscribersCount),
 		WatchersCount:    ghclient.IntValue(r.WatchersCount),
-		CreatedAt:        ghclient.TimestampConverter(r.CreatedAt),
-		PushedAt:         ghclient.TimestampConverter(r.PushedAt),
-		UpdatedAt:        ghclient.TimestampConverter(r.UpdatedAt),
+		CreatedAt:        ghclient.ConvertTimestamp(r.CreatedAt),
+		PushedAt:         ghclient.ConvertTimestamp(r.PushedAt),
+		UpdatedAt:        ghclient.ConvertTimestamp(r.UpdatedAt),
 		Language:         ghclient.StringValue(r.Language),
 		Fork:             ghclient.BoolValue(r.Fork),
 		Size:             ghclient.IntValue(r.Size),

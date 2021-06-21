@@ -61,7 +61,8 @@ spec:
               - Delete
               type: string
             forProvider:
-              description: RepositoryParameters represents the status of a Repository.
+              description: RepositoryParameters defines the desired state of a GitHub
+                Repository.
               properties:
                 allowMergeCommit:
                   description: 'Either true to allow merging pull requests with a

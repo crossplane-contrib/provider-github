@@ -108,7 +108,7 @@ func syncedRepository() *github.Repository {
 	}
 }
 
-func TestGenerateRepository(t *testing.T) {
+func TestOverrideParameters(t *testing.T) {
 	type args struct {
 		repo *github.Repository
 		rp   v1alpha1.RepositoryParameters
@@ -117,7 +117,7 @@ func TestGenerateRepository(t *testing.T) {
 		args
 		out *github.Repository
 	}{
-		"Should create a *github.Repository from RepositoryParameters": {
+		"Must create a *github.Repository from RepositoryParameters": {
 			args: args{
 				rp:   *params(),
 				repo: unsyncedRepository(),
@@ -128,9 +128,9 @@ func TestGenerateRepository(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			GenerateRepository(tc.args.rp, tc.args.repo)
-			if diff := cmp.Diff(tc.out, tc.args.repo); diff != "" {
-				t.Errorf("GenerateTopic(...): -want, +got:\n%s", diff)
+			got := OverrideParameters(tc.args.rp, *tc.args.repo)
+			if diff := cmp.Diff(*tc.out, got); diff != "" {
+				t.Errorf("OverrideParameters(...): -want, +got:\n%s", diff)
 			}
 		})
 	}
@@ -145,7 +145,7 @@ func TestLateInitialize(t *testing.T) {
 		args
 		out *v1alpha1.RepositoryParameters
 	}{
-		"Should initialize empty RepositoryParameters fields if they are given in github.Repository": {
+		"Must initialize empty RepositoryParameters fields if they are given in github.Repository": {
 			args: args{
 				repo: *syncedRepository(),
 				rp: &v1alpha1.RepositoryParameters{
@@ -211,7 +211,7 @@ func TestGenerateObservation(t *testing.T) {
 		args
 		out v1alpha1.RepositoryObservation
 	}{
-		"Should generate an RepositoryObservation based on the given github.Repository": {
+		"Must generate an RepositoryObservation based on the given github.Repository": {
 			args: args{
 				repo: *syncedRepository(),
 			},
@@ -228,7 +228,7 @@ func TestGenerateObservation(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got := GenerateObservation(tc.args.repo)
 			if diff := cmp.Diff(tc.out, got); diff != "" {
-				t.Errorf("IsUpToDate(...): -want, +got:\n%s", diff)
+				t.Errorf("GenerateObservation(...): -want, +got:\n%s", diff)
 			}
 		})
 	}

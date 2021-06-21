@@ -131,12 +131,11 @@ func (e *external) Create(ctx context.Context, mgd resource.Managed) (managed.Ex
 		return managed.ExternalCreation{}, errors.New(errUnexpectedObject)
 	}
 
-	repo := &github.Repository{}
-	repositories.GenerateRepository(cr.Spec.ForProvider, repo)
+	repo := repositories.OverrideParameters(cr.Spec.ForProvider, github.Repository{})
 	_, _, err := e.gh.Create(
 		ctx,
 		ghclient.StringValue(cr.Spec.ForProvider.Organization),
-		repo,
+		&repo,
 	)
 	if err != nil {
 		return managed.ExternalCreation{}, errors.Wrap(err, errCreateRepository)
@@ -147,7 +146,7 @@ func (e *external) Create(ctx context.Context, mgd resource.Managed) (managed.Ex
 	return managed.ExternalCreation{}, nil
 }
 
-func (e *external) Update(ctx context.Context, mgd resource.Managed) (managed.ExternalUpdate, error) { // nolint:gocyclo
+func (e *external) Update(ctx context.Context, mgd resource.Managed) (managed.ExternalUpdate, error) {
 	cr, ok := mgd.(*v1alpha1.Repository)
 	if !ok {
 		return managed.ExternalUpdate{}, errors.New(errUnexpectedObject)
@@ -163,13 +162,13 @@ func (e *external) Update(ctx context.Context, mgd resource.Managed) (managed.Ex
 		return managed.ExternalUpdate{}, errors.Wrap(err, errGetRepository)
 	}
 
-	repositories.GenerateRepository(cr.Spec.ForProvider, r)
+	repo := repositories.OverrideParameters(cr.Spec.ForProvider, *r)
 
 	_, _, err = e.gh.Edit(
 		ctx,
 		cr.Spec.ForProvider.Owner,
 		cr.Status.AtProvider.Name,
-		r,
+		&repo,
 	)
 	return managed.ExternalUpdate{}, errors.Wrap(err, errUpdateRepository)
 }
@@ -192,12 +191,13 @@ func (e *external) Delete(ctx context.Context, mgd resource.Managed) error {
 // is made with the status name. This is useful when updating the Repository name.
 func (e *external) GetRepository(ctx context.Context, owner, specName, statusName string) (*github.Repository, *github.Response, error) {
 	repo, res, err := e.gh.Get(ctx, owner, specName)
-	if err != nil {
-		repo, res, err = e.gh.Get(ctx, owner, statusName)
-		if err != nil {
-			return nil, res, err
-		}
+	if err == nil {
 		return repo, res, nil
+	}
+
+	repo, res, err = e.gh.Get(ctx, owner, statusName)
+	if err != nil {
+		return nil, res, err
 	}
 	return repo, res, nil
 }

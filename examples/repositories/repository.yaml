@@ -7,3 +7,5 @@ spec:
     name: sample
     owner: crossplane
     org: crossplane
+  providerConfigRef:
+    name: default
