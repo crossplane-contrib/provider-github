@@ -6,11 +6,12 @@ require (
 	github.com/crossplane/crossplane-runtime v0.13.0
 	github.com/crossplane/crossplane-tools v0.0.0-20201201125637-9ddc70edfd0d
 	github.com/fatih/color v1.9.0 // indirect
-	github.com/google/go-cmp v0.5.4 // indirect
+	github.com/google/go-cmp v0.5.4
 	github.com/google/go-github/v33 v33.0.0
 	github.com/google/uuid v1.1.4 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect
 	github.com/kr/text v0.2.0 // indirect
+	github.com/mitchellh/copystructure v1.2.0
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/onsi/gomega v1.10.3 // indirect
 	github.com/pkg/errors v0.9.1
