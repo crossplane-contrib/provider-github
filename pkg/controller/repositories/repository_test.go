@@ -667,7 +667,7 @@ func TestCreateRepository(t *testing.T) {
 					},
 				},
 				github: &fake.MockService{
-					MockCreateTemplate: func(ctx context.Context, templateOwner string, templateRepo string, templateRepoReq *github.TemplateRepoRequest) (*github.Repository, *github.Response, error) {
+					MockCreateFromTemplate: func(ctx context.Context, templateOwner string, templateRepo string, templateRepoReq *github.TemplateRepoRequest) (*github.Repository, *github.Response, error) {
 						return &github.Repository{},
 							&github.Response{},
 							nil
