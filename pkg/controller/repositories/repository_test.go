@@ -16,8 +16,6 @@ package repositories
 import (
 	"context"
 	"net/http"
-
-	// "encoding/json"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -25,6 +23,7 @@ import (
 	"github.com/crossplane-contrib/provider-github/apis/repositories/v1alpha1"
 	"github.com/crossplane-contrib/provider-github/pkg/clients/repositories"
 	"github.com/crossplane-contrib/provider-github/pkg/controller/repositories/fake"
+	v1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
@@ -41,6 +40,8 @@ var (
 	fakeTrue         = true
 	fakeFalse        = false
 	fakeType         = "User"
+	fakeOwner        = "crossplane"
+	fakeName         = "sample"
 )
 
 type repositoryOption func(*v1alpha1.Repository)
@@ -611,13 +612,82 @@ func TestGetRepository(t *testing.T) {
 			}
 			repo, res, err := e.GetRepository(context.Background(), tc.args.owner, tc.args.specName, tc.args.statusName)
 			if diff := cmp.Diff(tc.want.err, err, test.EquateErrors()); diff != "" {
-				t.Errorf("Delete(...): -want error, +got error:\n%s", diff)
+				t.Errorf("GetRepository(...): -want error, +got error:\n%s", diff)
 			}
 			if diff := cmp.Diff(tc.want.repo, repo); diff != "" {
-				t.Errorf("Delete(...): -want, +got:\n%s", diff)
+				t.Errorf("GetRepository(...): -want, +got:\n%s", diff)
 			}
 			if diff := cmp.Diff(tc.want.response, res); diff != "" {
-				t.Errorf("Delete(...): -want, +got:\n%s", diff)
+				t.Errorf("GetRepository(...): -want, +got:\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestCreateRepository(t *testing.T) {
+	type args struct {
+		rp     v1alpha1.RepositoryParameters
+		github repositories.Service
+	}
+	type want struct {
+		err error
+	}
+	cases := map[string]struct {
+		reason string
+		args   args
+		want   want
+	}{
+		"CreateRepository": {
+			reason: "Must create a normal repository",
+			args: args{
+				rp: v1alpha1.RepositoryParameters{
+					Owner: fakeOwner,
+					Name:  fakeName,
+				},
+				github: &fake.MockService{
+					MockCreate: func(ctx context.Context, org string, repo *github.Repository) (*github.Repository, *github.Response, error) {
+						return &github.Repository{},
+							&github.Response{},
+							nil
+					},
+				},
+			},
+			want: want{
+				err: nil,
+			},
+		},
+		"CreateRepositoryBasedOnTemplate": {
+			reason: "Must create a repository based on template",
+			args: args{
+				rp: v1alpha1.RepositoryParameters{
+					Owner: fakeOwner,
+					Name:  fakeName,
+					Template: &v1.Reference{
+						Name: "crossplane/provider-template",
+					},
+				},
+				github: &fake.MockService{
+					MockCreateTemplate: func(ctx context.Context, templateOwner string, templateRepo string, templateRepoReq *github.TemplateRepoRequest) (*github.Repository, *github.Response, error) {
+						return &github.Repository{},
+							&github.Response{},
+							nil
+					},
+				},
+			},
+			want: want{
+				err: nil,
+			},
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			e := external{
+				gh: tc.args.github,
+			}
+			err := e.CreateRepository(context.Background(), tc.args.rp)
+			if diff := cmp.Diff(tc.want.err, err, test.EquateErrors()); diff != "" {
+				t.Errorf("CreateRepository(...): -want error, +got error:\n%s", diff)
 			}
 		})
 	}

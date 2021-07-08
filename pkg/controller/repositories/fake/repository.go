@@ -52,6 +52,7 @@ func (m *MockService) Delete(ctx context.Context, owner, repo string) (*github.R
 	return m.MockDelete(ctx, owner, repo)
 }
 
+// CreateFromTemplate is a fake CreateFromTemplate SDK method
 func (m *MockService) CreateFromTemplate(ctx context.Context, templateOwner, templateRepo string, templateRepoReq *github.TemplateRepoRequest) (*github.Repository, *github.Response, error) {
 	return m.MockCreateTemplate(ctx, templateOwner, templateRepo, templateRepoReq)
 }

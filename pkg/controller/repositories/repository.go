@@ -102,7 +102,7 @@ func (e *external) Observe(ctx context.Context, mgd resource.Managed) (managed.E
 	// Import repository if already exists
 	lateInit := false
 	currentSpec := cr.Spec.ForProvider.DeepCopy()
-	repositories.LateInitialize(&cr.Spec.ForProvider, *r)
+	repositories.LateInitialize(&cr.Spec.ForProvider, r, cr.GetCondition(xpv1.TypeReady))
 	if !cmp.Equal(currentSpec, &cr.Spec.ForProvider) {
 		if err := e.client.Update(ctx, cr); err != nil {
 			return managed.ExternalObservation{}, errors.Wrap(err, errKubeUpdateRepository)
@@ -131,12 +131,7 @@ func (e *external) Create(ctx context.Context, mgd resource.Managed) (managed.Ex
 		return managed.ExternalCreation{}, errors.New(errUnexpectedObject)
 	}
 
-	repo := repositories.OverrideParameters(cr.Spec.ForProvider, github.Repository{})
-	_, _, err := e.gh.Create(
-		ctx,
-		ghclient.StringValue(cr.Spec.ForProvider.Organization),
-		&repo,
-	)
+	err := e.CreateRepository(ctx, cr.Spec.ForProvider)
 	if err != nil {
 		return managed.ExternalCreation{}, errors.Wrap(err, errCreateRepository)
 	}
@@ -200,4 +195,25 @@ func (e *external) GetRepository(ctx context.Context, owner, specName, statusNam
 		return nil, res, err
 	}
 	return repo, res, nil
+}
+
+// CreateRepository makes API calls to create a normal repository or a derivative of a template
+func (e *external) CreateRepository(ctx context.Context, repository v1alpha1.RepositoryParameters) error {
+	if repository.Template == nil {
+		repo := repositories.OverrideParameters(repository, github.Repository{})
+		_, _, err := e.gh.Create(
+			ctx,
+			ghclient.StringValue(repository.Organization),
+			&repo,
+		)
+		return err
+	}
+	templateRef, err := repositories.SplitFullName(repository.Template.Name)
+	if err != nil {
+		return err
+	}
+
+	repo := repositories.OverrideTemplateRepoRequest(repository)
+	_, _, err = e.gh.CreateFromTemplate(ctx, templateRef["owner"], templateRef["name"], &repo)
+	return err
 }
