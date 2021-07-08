@@ -25,10 +25,11 @@ var _ repositories.Service = (*MockService)(nil)
 
 // MockService is a mock implementation of the Service
 type MockService struct {
-	MockCreate func(ctx context.Context, org string, repo *github.Repository) (*github.Repository, *github.Response, error)
-	MockGet    func(ctx context.Context, owner, repo string) (*github.Repository, *github.Response, error)
-	MockEdit   func(ctx context.Context, owner, repo string, repository *github.Repository) (*github.Repository, *github.Response, error)
-	MockDelete func(ctx context.Context, owner, repo string) (*github.Response, error)
+	MockCreate         func(ctx context.Context, org string, repo *github.Repository) (*github.Repository, *github.Response, error)
+	MockGet            func(ctx context.Context, owner, repo string) (*github.Repository, *github.Response, error)
+	MockEdit           func(ctx context.Context, owner, repo string, repository *github.Repository) (*github.Repository, *github.Response, error)
+	MockDelete         func(ctx context.Context, owner, repo string) (*github.Response, error)
+	MockCreateTemplate func(ctx context.Context, templateOwner, templateRepo string, templateRepoReq *github.TemplateRepoRequest) (*github.Repository, *github.Response, error)
 }
 
 // Create is a fake Create SDK method
@@ -49,4 +50,8 @@ func (m *MockService) Edit(ctx context.Context, owner, repo string, repository *
 // Delete is a fake Delete SDK method
 func (m *MockService) Delete(ctx context.Context, owner, repo string) (*github.Response, error) {
 	return m.MockDelete(ctx, owner, repo)
+}
+
+func (m *MockService) CreateFromTemplate(ctx context.Context, templateOwner, templateRepo string, templateRepoReq *github.TemplateRepoRequest) (*github.Repository, *github.Response, error) {
+	return m.MockCreateTemplate(ctx, templateOwner, templateRepo, templateRepoReq)
 }
