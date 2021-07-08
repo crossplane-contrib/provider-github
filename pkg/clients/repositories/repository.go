@@ -16,8 +16,11 @@ package repositories
 import (
 	"context"
 
+	"strings"
+
 	"github.com/crossplane-contrib/provider-github/apis/repositories/v1alpha1"
 	ghclient "github.com/crossplane-contrib/provider-github/pkg/clients"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/go-github/v33/github"
@@ -27,6 +30,7 @@ import (
 
 const (
 	errCheckUpToDate = "unable to determine if external resource is up to date"
+	errFullname      = "The templateRef fullname is not valid. It needs to be in the format {owner}/{name}"
 )
 
 // Service defines the Repositories operations
@@ -35,6 +39,7 @@ type Service interface {
 	Get(ctx context.Context, owner, repo string) (*github.Repository, *github.Response, error)
 	Edit(ctx context.Context, owner, repo string, repository *github.Repository) (*github.Repository, *github.Response, error)
 	Delete(ctx context.Context, owner, repo string) (*github.Response, error)
+	CreateFromTemplate(ctx context.Context, templateOwner, templateRepo string, templateRepoReq *github.TemplateRepoRequest) (*github.Repository, *github.Response, error)
 }
 
 // NewService creates a new Service based on the *github.Client
@@ -210,7 +215,7 @@ func GenerateObservation(r github.Repository) v1alpha1.RepositoryObservation {
 
 // LateInitialize fills the empty fields of RepositoryParameters if the corresponding
 // fields are given in Repository.
-func LateInitialize(rp *v1alpha1.RepositoryParameters, r github.Repository) { // nolint:gocyclo
+func LateInitialize(rp *v1alpha1.RepositoryParameters, r *github.Repository, c xpv1.Condition) { // nolint:gocyclo
 	if rp.Organization == nil && ghclient.StringValue(r.Owner.Type) == "Organization" {
 		if r.Organization.Login != nil {
 			rp.Organization = r.Organization.Login
@@ -270,10 +275,65 @@ func LateInitialize(rp *v1alpha1.RepositoryParameters, r github.Repository) { //
 	if rp.HasDownloads == nil && r.HasDownloads != nil {
 		rp.HasDownloads = r.HasDownloads
 	}
-	if rp.DefaultBranch == nil && r.DefaultBranch != nil {
-		rp.DefaultBranch = r.DefaultBranch
-	}
 	if rp.Archived == nil && r.Archived != nil {
 		rp.Archived = r.Archived
 	}
+	if r.TemplateRepository != nil {
+		rp.Template = &xpv1.Reference{
+			Name: *r.TemplateRepository.FullName,
+		}
+	}
+
+	// This condition below is necessary because the GitHub API is not strongly
+	// consistent. In the first moments of creating a repository based on a
+	// template, the API always returns that the default branch is "main", then
+	// it is changed to the same default branch as the template. This can cause
+	// inconsistency in the desired state of the Repository (importing the wrong
+	// value into the default branch).
+	if c.Reason == xpv1.ReasonCreating && r.TemplateRepository != nil {
+		if rp.DefaultBranch == nil {
+			rp.DefaultBranch = r.TemplateRepository.DefaultBranch
+
+			// We change the r.DefaultBranch to have consistency when checking
+			// if the repository is up to date.
+			r.DefaultBranch = r.TemplateRepository.DefaultBranch
+		}
+	} else {
+		if rp.DefaultBranch == nil && r.DefaultBranch != nil {
+			rp.DefaultBranch = r.DefaultBranch
+		}
+	}
+}
+
+// SplitFullName splits the repository fullname into map[string]string
+// with the keys being "owner" and "name".
+func SplitFullName(fullname string) (map[string]string, error) {
+	split := strings.Split(fullname, "/")
+	if len(split) != 2 {
+		return nil, errors.New(errFullname)
+	}
+
+	return map[string]string{
+		"owner": split[0],
+		"name":  split[1],
+	}, nil
+}
+
+// OverrideTemplateRepoRequest overrides the parameters in github.TemplateRepoRequest
+// that are defined in RepositoryParameters.
+func OverrideTemplateRepoRequest(rp v1alpha1.RepositoryParameters) github.TemplateRepoRequest {
+	r := github.TemplateRepoRequest{}
+	if len(rp.Name) != 0 {
+		r.Name = ghclient.StringPtr(rp.Name)
+	}
+	if len(rp.Owner) != 0 {
+		r.Owner = ghclient.StringPtr(rp.Owner)
+	}
+	if rp.Description != nil {
+		r.Description = rp.Description
+	}
+	if rp.Private != nil {
+		r.Private = rp.Private
+	}
+	return r
 }
