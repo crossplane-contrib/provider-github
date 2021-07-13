@@ -36,6 +36,7 @@ var (
 	unexpectedObject resource.Managed
 	errBoom          = errors.New("boom")
 	notFound         = 404
+	ok               = 200
 	internalError    = 500
 	fakeTrue         = true
 	fakeFalse        = false
@@ -669,13 +670,110 @@ func TestCreateRepository(t *testing.T) {
 				github: &fake.MockService{
 					MockCreateFromTemplate: func(ctx context.Context, templateOwner string, templateRepo string, templateRepoReq *github.TemplateRepoRequest) (*github.Repository, *github.Response, error) {
 						return &github.Repository{},
-							&github.Response{},
+							&github.Response{
+								Response: &http.Response{
+									StatusCode: ok,
+								},
+							},
 							nil
 					},
 				},
 			},
 			want: want{
 				err: nil,
+			},
+		},
+		"RepositoryTemplateNotFound": {
+			reason: "Must fail when creating a repository based on template that doesn't exists",
+			args: args{
+				rp: v1alpha1.RepositoryParameters{
+					Owner: fakeOwner,
+					Name:  fakeName,
+					Template: &v1.Reference{
+						Name: "crossplane/provider-templaet",
+					},
+				},
+				github: &fake.MockService{
+					MockCreateFromTemplate: func(ctx context.Context, templateOwner string, templateRepo string, templateRepoReq *github.TemplateRepoRequest) (*github.Repository, *github.Response, error) {
+						return &github.Repository{},
+							&github.Response{
+								Response: &http.Response{
+									StatusCode: notFound,
+								},
+							},
+							errBoom
+					},
+				},
+			},
+			want: want{
+				err: errors.Wrap(errBoom, errTemplateNotFound),
+			},
+		},
+		"CreateRepositoryTemplateInternalError": {
+			reason: "Must fail when API returns a error when creating a repository based on template",
+			args: args{
+				rp: v1alpha1.RepositoryParameters{
+					Owner: fakeOwner,
+					Name:  fakeName,
+					Template: &v1.Reference{
+						Name: "crossplane/provider-template",
+					},
+				},
+				github: &fake.MockService{
+					MockCreateFromTemplate: func(ctx context.Context, templateOwner string, templateRepo string, templateRepoReq *github.TemplateRepoRequest) (*github.Repository, *github.Response, error) {
+						return &github.Repository{},
+							&github.Response{
+								Response: &http.Response{
+									StatusCode: internalError,
+								},
+							},
+							errBoom
+					},
+				},
+			},
+			want: want{
+				err: errBoom,
+			},
+		},
+		"CreateRepositoryError": {
+			reason: "Must fail when API returns a error when creating a repository",
+			args: args{
+				rp: v1alpha1.RepositoryParameters{
+					Owner: fakeOwner,
+					Name:  fakeName,
+				},
+				github: &fake.MockService{
+					MockCreate: func(ctx context.Context, org string, repo *github.Repository) (*github.Repository, *github.Response, error) {
+						return &github.Repository{},
+							&github.Response{},
+							errBoom
+					},
+				},
+			},
+			want: want{
+				err: errBoom,
+			},
+		},
+		"FailCreateRepositoryWithInvalidTemplateRef": {
+			reason: "Must fail templateRef is not valid",
+			args: args{
+				rp: v1alpha1.RepositoryParameters{
+					Owner: fakeOwner,
+					Name:  fakeName,
+					Template: &v1.Reference{
+						Name: "crossplane",
+					},
+				},
+				github: &fake.MockService{
+					MockCreateFromTemplate: func(ctx context.Context, templateOwner string, templateRepo string, templateRepoReq *github.TemplateRepoRequest) (*github.Repository, *github.Response, error) {
+						return &github.Repository{},
+							&github.Response{},
+							nil
+					},
+				},
+			},
+			want: want{
+				err: errors.New("The templateRef fullname is not valid. It needs to be in the format {owner}/{name}"),
 			},
 		},
 	}

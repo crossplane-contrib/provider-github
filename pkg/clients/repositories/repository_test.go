@@ -352,7 +352,7 @@ func TestSplitFullName(t *testing.T) {
 	}
 }
 
-func TestOverrideTemplateRepoRequest(t *testing.T) {
+func TestGenerateTemplateRepoRequest(t *testing.T) {
 	type args struct {
 		rp v1alpha1.RepositoryParameters
 	}
@@ -364,7 +364,7 @@ func TestOverrideTemplateRepoRequest(t *testing.T) {
 		args   args
 		want   want
 	}{
-		"OverrideSuccessfull": {
+		"GenerateSuccessfull": {
 			reason: "Must create a github.TemplateRepoRequest from RepositoryParameters",
 			args: args{
 				rp: *params(),
@@ -382,9 +382,9 @@ func TestOverrideTemplateRepoRequest(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			got := OverrideTemplateRepoRequest(tc.args.rp)
+			got := GenerateTemplateRepoRequest(tc.args.rp)
 			if diff := cmp.Diff(tc.want.repo, got); diff != "" {
-				t.Errorf("OverrideTemplateRepoRequest(...): -want, +got:\n%s", diff)
+				t.Errorf("GenerateTemplateRepoRequest(...): -want, +got:\n%s", diff)
 			}
 		})
 	}

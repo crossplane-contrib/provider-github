@@ -31,6 +31,7 @@ const (
 	errUpdateRepository     = "cannot update Repository"
 	errDeleteRepository     = "cannot delete Repository"
 	errKubeUpdateRepository = "cannot update Repository custom resource"
+	errTemplateNotFound     = "the referenced repository template was not found"
 )
 
 // SetupRepository adds a controller that reconciles Repositories.
@@ -213,7 +214,10 @@ func (e *external) CreateRepository(ctx context.Context, repository v1alpha1.Rep
 		return err
 	}
 
-	repo := repositories.OverrideTemplateRepoRequest(repository)
-	_, _, err = e.gh.CreateFromTemplate(ctx, templateRef["owner"], templateRef["name"], &repo)
+	repo := repositories.GenerateTemplateRepoRequest(repository)
+	_, res, err := e.gh.CreateFromTemplate(ctx, templateRef["owner"], templateRef["name"], &repo)
+	if res.StatusCode == 404 {
+		return errors.Wrap(err, errTemplateNotFound)
+	}
 	return err
 }

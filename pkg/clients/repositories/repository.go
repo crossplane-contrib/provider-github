@@ -319,9 +319,9 @@ func SplitFullName(fullname string) (map[string]string, error) {
 	}, nil
 }
 
-// OverrideTemplateRepoRequest overrides the parameters in github.TemplateRepoRequest
+// GenerateTemplateRepoRequest overrides the parameters in github.TemplateRepoRequest
 // that are defined in RepositoryParameters.
-func OverrideTemplateRepoRequest(rp v1alpha1.RepositoryParameters) github.TemplateRepoRequest {
+func GenerateTemplateRepoRequest(rp v1alpha1.RepositoryParameters) github.TemplateRepoRequest {
 	r := github.TemplateRepoRequest{}
 	if len(rp.Name) != 0 {
 		r.Name = ghclient.StringPtr(rp.Name)
