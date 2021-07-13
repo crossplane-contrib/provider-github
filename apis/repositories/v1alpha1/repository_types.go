@@ -151,6 +151,14 @@ type RepositoryParameters struct {
 	// Note: You cannot unarchive repositories through the API.
 	// +optional
 	Archived *bool `json:"archived,omitempty"`
+
+	// Reference to the repository template that this
+	// repository will be derived from.
+	// It is in the format <repository-owner>/<repository-name>
+	// (e.g crossplane/provider-github)
+	// +optional
+	// +immutable
+	Template *xpv1.Reference `json:"templateRef,omitempty"`
 }
 
 // RepositorySpec defines the desired state of a Repository.
@@ -233,13 +241,13 @@ type RepositoryObservation struct {
 	WatchersCount    int `json:"watchersCount,omitempty"`
 
 	// Time that the Repository was created.
-	CreatedAt metav1.Time `json:"createdAt,omitempty"`
+	CreatedAt *metav1.Time `json:"createdAt,omitempty"`
 
 	// Time that the Repository was pushed.
-	PushedAt metav1.Time `json:"pushedAt,omitempty"`
+	PushedAt *metav1.Time `json:"pushedAt,omitempty"`
 
 	// Time that the Repository was updated.
-	UpdatedAt metav1.Time `json:"updatedAt,omitempty"`
+	UpdatedAt *metav1.Time `json:"updatedAt,omitempty"`
 
 	// Main programming language of the Repository.
 	Language string `json:"language,omitempty"`
@@ -256,7 +264,6 @@ type RepositoryObservation struct {
 	// TODOs below are overly verbose
 	// TODO: Parent repository
 	// TODO: Source repository
-	// TODO: TemplateRepository
 	// TODO: Organization
 }
 

@@ -155,6 +155,17 @@ spec:
                     organization.
                   format: int64
                   type: integer
+                templateRef:
+                  description: Reference to the repository template that this repository
+                    will be derived from. It is in the format <repository-owner>/<repository-name>
+                    (e.g crossplane/provider-github)
+                  properties:
+                    name:
+                      description: Name of the referenced object.
+                      type: string
+                  required:
+                  - name
+                  type: object
                 visibility:
                   description: Can be public or private. You cannot have private and
                     visibility fields contradictory to each other. If your organization
