@@ -28,9 +28,6 @@ type RepositoryParameters struct {
 	// The owner can be an organization or an user.
 	Owner string `json:"owner"`
 
-	// The name of the repository.
-	Name string `json:"name"`
-
 	// The name of the organization that owns the Repository.
 	// +optional
 	Organization *string `json:"org,omitempty"`

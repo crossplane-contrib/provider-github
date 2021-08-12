@@ -1,3 +1,19 @@
+/*
+Copyright 2021 The Crossplane Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package repositories
 
 import (
@@ -14,6 +30,7 @@ import (
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/ratelimiter"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
@@ -54,7 +71,10 @@ func SetupRepository(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimite
 			),
 			managed.WithConnectionPublishers(),
 			managed.WithReferenceResolver(managed.NewAPISimpleReferenceResolver(mgr.GetClient())),
-			managed.WithInitializers(managed.NewDefaultProviderConfig(mgr.GetClient())),
+			managed.WithInitializers(
+				managed.NewDefaultProviderConfig(mgr.GetClient()),
+				managed.NewNameAsExternalName(mgr.GetClient()),
+			),
 			managed.WithLogger(l.WithValues("controller", name)),
 			managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name)))))
 }
@@ -90,7 +110,7 @@ func (e *external) Observe(ctx context.Context, mgd resource.Managed) (managed.E
 	r, res, err := e.GetRepository(
 		ctx,
 		cr.Spec.ForProvider.Owner,
-		cr.Spec.ForProvider.Name,
+		meta.GetExternalName(cr),
 		cr.Status.AtProvider.Name,
 	)
 	if err != nil {
@@ -114,7 +134,7 @@ func (e *external) Observe(ctx context.Context, mgd resource.Managed) (managed.E
 	cr.Status.SetConditions(xpv1.Available())
 	cr.Status.AtProvider = repositories.GenerateObservation(*r)
 
-	upToDate, err := repositories.IsUpToDate(&cr.Spec.ForProvider, r)
+	upToDate, err := repositories.IsUpToDate(&cr.Spec.ForProvider, r, meta.GetExternalName(cr))
 	if err != nil {
 		return managed.ExternalObservation{}, errors.Wrap(err, errCheckUpToDate)
 	}
@@ -132,7 +152,7 @@ func (e *external) Create(ctx context.Context, mgd resource.Managed) (managed.Ex
 		return managed.ExternalCreation{}, errors.New(errUnexpectedObject)
 	}
 
-	err := e.CreateRepository(ctx, cr.Spec.ForProvider)
+	err := e.CreateRepository(ctx, cr.Spec.ForProvider, meta.GetExternalName(cr))
 	if err != nil {
 		return managed.ExternalCreation{}, errors.Wrap(err, errCreateRepository)
 	}
@@ -151,14 +171,14 @@ func (e *external) Update(ctx context.Context, mgd resource.Managed) (managed.Ex
 	r, _, err := e.GetRepository(
 		ctx,
 		cr.Spec.ForProvider.Owner,
-		cr.Spec.ForProvider.Name,
+		meta.GetExternalName(cr),
 		cr.Status.AtProvider.Name,
 	)
 	if err != nil {
 		return managed.ExternalUpdate{}, errors.Wrap(err, errGetRepository)
 	}
 
-	repo := repositories.OverrideParameters(cr.Spec.ForProvider, *r)
+	repo := repositories.OverrideParameters(cr.Spec.ForProvider, *r, meta.GetExternalName(cr))
 
 	_, _, err = e.gh.Edit(
 		ctx,
@@ -177,7 +197,7 @@ func (e *external) Delete(ctx context.Context, mgd resource.Managed) error {
 
 	_, err := e.gh.Delete(ctx,
 		cr.Spec.ForProvider.Owner,
-		cr.Spec.ForProvider.Name,
+		meta.GetExternalName(cr),
 	)
 	return errors.Wrap(err, errDeleteRepository)
 }
@@ -199,9 +219,9 @@ func (e *external) GetRepository(ctx context.Context, owner, specName, statusNam
 }
 
 // CreateRepository makes API calls to create a normal repository or a derivative of a template
-func (e *external) CreateRepository(ctx context.Context, repository v1alpha1.RepositoryParameters) error {
+func (e *external) CreateRepository(ctx context.Context, repository v1alpha1.RepositoryParameters, name string) error {
 	if repository.Template == nil {
-		repo := repositories.OverrideParameters(repository, github.Repository{})
+		repo := repositories.OverrideParameters(repository, github.Repository{}, name)
 		_, _, err := e.gh.Create(
 			ctx,
 			ghclient.StringValue(repository.Organization),
@@ -214,7 +234,7 @@ func (e *external) CreateRepository(ctx context.Context, repository v1alpha1.Rep
 		return err
 	}
 
-	repo := repositories.GenerateTemplateRepoRequest(repository)
+	repo := repositories.GenerateTemplateRepoRequest(repository, name)
 	_, res, err := e.gh.CreateFromTemplate(ctx, templateRef["owner"], templateRef["name"], &repo)
 	if res.StatusCode == 404 {
 		return errors.Wrap(err, errTemplateNotFound)

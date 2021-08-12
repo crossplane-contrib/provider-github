@@ -50,7 +50,6 @@ var (
 
 func params() *v1alpha1.RepositoryParameters {
 	return &v1alpha1.RepositoryParameters{
-		Name:          name,
 		Owner:         fakeOwner,
 		Description:   &description,
 		HasIssues:     &fakeHasIssues,
@@ -97,7 +96,7 @@ func syncedRepository() *github.Repository {
 		Owner: &github.User{
 			Type: &fakeType,
 		},
-		Name:          &params().Name,
+		Name:          &name,
 		Description:   params().Description,
 		HasIssues:     params().HasIssues,
 		Private:       params().Private,
@@ -132,7 +131,7 @@ func TestOverrideParameters(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			got := OverrideParameters(tc.args.rp, *tc.args.repo)
+			got := OverrideParameters(tc.args.rp, *tc.args.repo, "sample")
 			if diff := cmp.Diff(*tc.out, got); diff != "" {
 				t.Errorf("OverrideParameters(...): -want, +got:\n%s", diff)
 			}
@@ -153,7 +152,6 @@ func TestLateInitialize(t *testing.T) {
 		"Must use template fields in initialization": {
 			args: args{
 				repo: github.Repository{
-					Name: &params().Name,
 					Owner: &github.User{
 						Type: &fakeType,
 					},
@@ -164,7 +162,6 @@ func TestLateInitialize(t *testing.T) {
 					},
 				},
 				rp: &v1alpha1.RepositoryParameters{
-					Name:  params().Name,
 					Owner: params().Owner,
 					Template: &xpv1.Reference{
 						Name: fakeFullName,
@@ -175,7 +172,6 @@ func TestLateInitialize(t *testing.T) {
 				},
 			},
 			out: &v1alpha1.RepositoryParameters{
-				Name:  params().Name,
 				Owner: params().Owner,
 				Template: &xpv1.Reference{
 					Name: fakeFullName,
@@ -186,7 +182,6 @@ func TestLateInitialize(t *testing.T) {
 		"Must initialize template spec field in initialization": {
 			args: args{
 				repo: github.Repository{
-					Name: &params().Name,
 					Owner: &github.User{
 						Type: &fakeType,
 					},
@@ -197,13 +192,11 @@ func TestLateInitialize(t *testing.T) {
 					},
 				},
 				rp: &v1alpha1.RepositoryParameters{
-					Name:  params().Name,
 					Owner: params().Owner,
 				},
 				reason: xpv1.Condition{},
 			},
 			out: &v1alpha1.RepositoryParameters{
-				Name:  params().Name,
 				Owner: params().Owner,
 				Template: &xpv1.Reference{
 					Name: fakeFullName,
@@ -215,7 +208,6 @@ func TestLateInitialize(t *testing.T) {
 			args: args{
 				repo: *syncedRepository(),
 				rp: &v1alpha1.RepositoryParameters{
-					Name:  params().Name,
 					Owner: params().Owner,
 				},
 				reason: xpv1.Condition{},
@@ -262,7 +254,7 @@ func TestIsUpToDate(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			got, _ := IsUpToDate(tc.args.rp, tc.args.repo)
+			got, _ := IsUpToDate(tc.args.rp, tc.args.repo, "sample")
 			if diff := cmp.Diff(tc.out, got); diff != "" {
 				t.Errorf("IsUpToDate(...): -want, +got:\n%s", diff)
 			}
@@ -382,7 +374,7 @@ func TestGenerateTemplateRepoRequest(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			got := GenerateTemplateRepoRequest(tc.args.rp)
+			got := GenerateTemplateRepoRequest(tc.args.rp, "sample")
 			if diff := cmp.Diff(tc.want.repo, got); diff != "" {
 				t.Errorf("GenerateTemplateRepoRequest(...): -want, +got:\n%s", diff)
 			}

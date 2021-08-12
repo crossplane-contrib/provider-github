@@ -51,7 +51,7 @@ func NewService(token string) *Service {
 }
 
 // IsUpToDate checks whether Repository is configured with given RepositoryParameters.
-func IsUpToDate(rp *v1alpha1.RepositoryParameters, observed *github.Repository) (bool, error) {
+func IsUpToDate(rp *v1alpha1.RepositoryParameters, observed *github.Repository, name string) (bool, error) {
 	generated, err := copystructure.Copy(observed)
 	if err != nil {
 		return true, errors.Wrap(err, errCheckUpToDate)
@@ -61,7 +61,7 @@ func IsUpToDate(rp *v1alpha1.RepositoryParameters, observed *github.Repository) 
 		return true, errors.New(errCheckUpToDate)
 	}
 
-	desired := OverrideParameters(*rp, *clone)
+	desired := OverrideParameters(*rp, *clone, name)
 
 	return cmp.Equal(
 		desired,
@@ -72,9 +72,9 @@ func IsUpToDate(rp *v1alpha1.RepositoryParameters, observed *github.Repository) 
 
 // OverrideParameters override the parameters in github.Repository
 // that are defined in RepositoryParameters
-func OverrideParameters(rp v1alpha1.RepositoryParameters, r github.Repository) github.Repository { // nolint:gocyclo
-	if len(rp.Name) != 0 {
-		r.Name = ghclient.StringPtr(rp.Name)
+func OverrideParameters(rp v1alpha1.RepositoryParameters, r github.Repository, name string) github.Repository { // nolint:gocyclo
+	if name != "" {
+		r.Name = &name
 	}
 	if rp.Description != nil {
 		r.Description = rp.Description
@@ -321,11 +321,9 @@ func SplitFullName(fullname string) (map[string]string, error) {
 
 // GenerateTemplateRepoRequest overrides the parameters in github.TemplateRepoRequest
 // that are defined in RepositoryParameters.
-func GenerateTemplateRepoRequest(rp v1alpha1.RepositoryParameters) github.TemplateRepoRequest {
+func GenerateTemplateRepoRequest(rp v1alpha1.RepositoryParameters, name string) github.TemplateRepoRequest {
 	r := github.TemplateRepoRequest{}
-	if len(rp.Name) != 0 {
-		r.Name = ghclient.StringPtr(rp.Name)
-	}
+	r.Name = &name
 	if len(rp.Owner) != 0 {
 		r.Owner = ghclient.StringPtr(rp.Owner)
 	}

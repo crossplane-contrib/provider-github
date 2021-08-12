@@ -42,7 +42,6 @@ var (
 	fakeFalse        = false
 	fakeType         = "User"
 	fakeOwner        = "crossplane"
-	fakeName         = "sample"
 )
 
 type repositoryOption func(*v1alpha1.Repository)
@@ -643,7 +642,6 @@ func TestCreateRepository(t *testing.T) {
 			args: args{
 				rp: v1alpha1.RepositoryParameters{
 					Owner: fakeOwner,
-					Name:  fakeName,
 				},
 				github: &fake.MockService{
 					MockCreate: func(ctx context.Context, org string, repo *github.Repository) (*github.Repository, *github.Response, error) {
@@ -662,7 +660,6 @@ func TestCreateRepository(t *testing.T) {
 			args: args{
 				rp: v1alpha1.RepositoryParameters{
 					Owner: fakeOwner,
-					Name:  fakeName,
 					Template: &v1.Reference{
 						Name: "crossplane/provider-template",
 					},
@@ -688,7 +685,6 @@ func TestCreateRepository(t *testing.T) {
 			args: args{
 				rp: v1alpha1.RepositoryParameters{
 					Owner: fakeOwner,
-					Name:  fakeName,
 					Template: &v1.Reference{
 						Name: "crossplane/provider-templaet",
 					},
@@ -714,7 +710,6 @@ func TestCreateRepository(t *testing.T) {
 			args: args{
 				rp: v1alpha1.RepositoryParameters{
 					Owner: fakeOwner,
-					Name:  fakeName,
 					Template: &v1.Reference{
 						Name: "crossplane/provider-template",
 					},
@@ -740,7 +735,6 @@ func TestCreateRepository(t *testing.T) {
 			args: args{
 				rp: v1alpha1.RepositoryParameters{
 					Owner: fakeOwner,
-					Name:  fakeName,
 				},
 				github: &fake.MockService{
 					MockCreate: func(ctx context.Context, org string, repo *github.Repository) (*github.Repository, *github.Response, error) {
@@ -759,7 +753,6 @@ func TestCreateRepository(t *testing.T) {
 			args: args{
 				rp: v1alpha1.RepositoryParameters{
 					Owner: fakeOwner,
-					Name:  fakeName,
 					Template: &v1.Reference{
 						Name: "crossplane",
 					},
@@ -783,7 +776,7 @@ func TestCreateRepository(t *testing.T) {
 			e := external{
 				gh: tc.args.github,
 			}
-			err := e.CreateRepository(context.Background(), tc.args.rp)
+			err := e.CreateRepository(context.Background(), tc.args.rp, "test")
 			if diff := cmp.Diff(tc.want.err, err, test.EquateErrors()); diff != "" {
 				t.Errorf("CreateRepository(...): -want error, +got error:\n%s", diff)
 			}
