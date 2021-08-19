@@ -29,7 +29,7 @@ type SecretsParameters struct {
 	// The name of the repository.
 	Repository string `json:"repository"`
 	// The value of the secret
-	Value xpv1.SecretKeySelector `json:"value"`
+	Value *xpv1.SecretKeySelector `json:"value"`
 }
 
 // SecretsObservation are the observable fields of a Secrets.

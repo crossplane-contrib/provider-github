@@ -49,11 +49,11 @@ func NewService(token string) *Service {
 func CreateOrUpdateSec(ctx context.Context, cr *v1alpha1.SecretsParameters, name string, client client.Client, gh Service) (string, error) {
 	encryptedSecret, hash, err := callEncryptSecret(ctx, client, cr, name, gh)
 	if err != nil {
-		return "", fmt.Errorf("error to call secret: %v", err)
+		return "", err
 	}
 
 	if _, err := gh.CreateOrUpdateRepoSecret(ctx, cr.Owner, cr.Repository, encryptedSecret); err != nil {
-		return "", fmt.Errorf("error to create or update secret: %v", err)
+		return "", err
 	}
 
 	return hash, nil
@@ -61,14 +61,20 @@ func CreateOrUpdateSec(ctx context.Context, cr *v1alpha1.SecretsParameters, name
 
 // IsUpToDate check if encrypted value is up to date
 func IsUpToDate(ctx context.Context, client client.Client, p *v1alpha1.SecretsParameters, o *v1alpha1.SecretsObservation, name string, gh Service) (bool, error) {
+	var hash string
 	sec, _, err := gh.GetRepoSecret(ctx, p.Owner, p.Repository, name)
 	if err != nil {
-		return false, fmt.Errorf("error to get secret from github: %v", err)
+		return false, err
 	}
 
-	_, hash, err := callEncryptSecret(ctx, client, p, name, gh)
+	ref := xpv1.CommonCredentialSelectors{SecretRef: p.Value}
+	val, err := resource.ExtractSecret(ctx, client, ref)
 	if err != nil {
-		return false, fmt.Errorf("error to call secret: %v", err)
+		return false, err
+	}
+
+	if hash = generateHash(string(val)); len(val) <= 0 {
+		hash = generateHash("test")
 	}
 
 	if hash != *o.EncryptValue {
@@ -82,13 +88,14 @@ func IsUpToDate(ctx context.Context, client client.Client, p *v1alpha1.SecretsPa
 	return true, nil
 }
 
+// callEncryptedSecret setup encrypted secret and generates hash to store
 func callEncryptSecret(ctx context.Context, client client.Client, cr *v1alpha1.SecretsParameters, name string, gh Service) (*github.EncryptedSecret, string, error) {
 	publicKey, _, err := gh.GetRepoPublicKey(ctx, cr.Owner, cr.Repository)
 	if err != nil {
 		return nil, "", err
 	}
 
-	ref := xpv1.CommonCredentialSelectors{SecretRef: &cr.Value}
+	ref := xpv1.CommonCredentialSelectors{SecretRef: cr.Value}
 	val, _ := resource.ExtractSecret(ctx, client, ref)
 	encryptedSecret, err := encryptSecret(publicKey, name, string(val))
 	if err != nil {
@@ -99,11 +106,13 @@ func callEncryptSecret(ctx context.Context, client client.Client, cr *v1alpha1.S
 	return encryptedSecret, hash, nil
 }
 
+// generatehash generates hash SHA256
 func generateHash(secretValue string) string {
 	h := sha256.Sum256([]byte(secretValue))
 	return fmt.Sprintf("%x", h)
 }
 
+// encryptedSecret encrypt any value passed
 func encryptSecret(publicKey *github.PublicKey, secretName string, secretValue string) (*github.EncryptedSecret, error) {
 	decodedPublicKey, err := base64.StdEncoding.DecodeString(publicKey.GetKey())
 	if err != nil {

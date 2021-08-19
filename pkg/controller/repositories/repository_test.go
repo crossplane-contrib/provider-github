@@ -22,7 +22,7 @@ import (
 
 	"github.com/crossplane-contrib/provider-github/apis/repositories/v1alpha1"
 	"github.com/crossplane-contrib/provider-github/pkg/clients/repositories"
-	"github.com/crossplane-contrib/provider-github/pkg/controller/repositories/fake"
+	"github.com/crossplane-contrib/provider-github/pkg/fake"
 	v1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
