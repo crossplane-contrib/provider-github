@@ -73,7 +73,7 @@ func IsUpToDate(ctx context.Context, client client.Client, p *v1alpha1.SecretsPa
 		return false, err
 	}
 
-	if hash = generateHash(string(val)); len(val) <= 0 {
+	if hash = generateHash(string(val)); len(val) == 0 {
 		hash = generateHash("test")
 	}
 

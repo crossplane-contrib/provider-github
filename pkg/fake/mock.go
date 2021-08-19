@@ -66,7 +66,7 @@ func (m *MockService) GetRepoSecret(ctx context.Context, owner, repo, name strin
 	return m.MockGetRepoSecret(ctx, owner, repo, name)
 }
 
-// etRepoPublicKey is a fake etRepoPublicKey SDK method
+// GetRepoPublicKey is a fake GetRepoPublicKey SDK method
 func (m *MockService) GetRepoPublicKey(ctx context.Context, owner, repo string) (*github.PublicKey, *github.Response, error) {
 	return m.MockGetRepoPublicKey(ctx, owner, repo)
 }
