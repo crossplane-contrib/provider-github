@@ -1,0 +1,15 @@
+apiVersion: repositories.github.crossplane.io/v1alpha1
+kind: Content
+metadata:
+  name: demo4
+spec:
+  forProvider:
+    owner: crossplane
+    repo: provider-template
+    branch: master
+    path: LICENSE.md
+    message: Update License
+    content: |
+      foo bar
+  providerConfigRef:
+    name: default

@@ -45,6 +45,15 @@ var (
 	RepositoryGroupVersionKind = SchemeGroupVersion.WithKind(RepositoryKind)
 )
 
+// Content type metadata.
+var (
+	ContentKind             = reflect.TypeOf(Content{}).Name()
+	ContentGroupKind        = schema.GroupKind{Group: Group, Kind: ContentKind}.String()
+	ContentKindAPIVersion   = ContentKind + "." + SchemeGroupVersion.String()
+	ContentGroupVersionKind = SchemeGroupVersion.WithKind(ContentKind)
+)
+
 func init() {
 	SchemeBuilder.Register(&Repository{}, &RepositoryList{})
+	SchemeBuilder.Register(&Content{}, &ContentList{})
 }
