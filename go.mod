@@ -3,6 +3,7 @@ module github.com/crossplane-contrib/provider-github
 go 1.13
 
 require (
+	github.com/bradleyfalzon/ghinstallation v1.1.1
 	github.com/crossplane/crossplane-runtime v0.13.0
 	github.com/crossplane/crossplane-tools v0.0.0-20201201125637-9ddc70edfd0d
 	github.com/fatih/color v1.9.0 // indirect

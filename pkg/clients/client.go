@@ -18,7 +18,11 @@ package clients
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
 
+	ghapps "github.com/bradleyfalzon/ghinstallation"
 	"github.com/google/go-github/v33/github"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
@@ -46,13 +50,38 @@ func GetConfig(ctx context.Context, c client.Client, mg resource.Managed) ([]byt
 	return resource.CommonCredentialExtractor(ctx, pc.Spec.Credentials.Source, c, pc.Spec.Credentials.CommonCredentialSelectors)
 }
 
+// newClientFields helps to create new client by differents credentials
+type newClientFields struct {
+	ID             int64  `json:"id,omitempty"`
+	InstallationID int64  `json:"installationId,omitempty"`
+	PEMFile        string `json:"pemFile,omitempty"`
+	PAT            string `json:"token,omitempty"`
+}
+
 // NewClient creates a new client.
 func NewClient(token string) *github.Client {
 	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
-	)
-	tc := oauth2.NewClient(ctx, ts)
+	creds := newClientFields{}
+	var tc *http.Client
+
+	if err := json.Unmarshal([]byte(token), &creds); err != nil {
+		fmt.Println(err)
+	}
+
+	if creds.PAT != "" {
+		ts := oauth2.StaticTokenSource(
+			&oauth2.Token{AccessToken: creds.PAT},
+		)
+
+		tc = oauth2.NewClient(ctx, ts)
+	} else {
+		ts, err := ghapps.New(http.DefaultTransport, creds.ID, creds.InstallationID, []byte(creds.PEMFile))
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		tc = &http.Client{Transport: ts}
+	}
 
 	return github.NewClient(tc)
 }
