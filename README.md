@@ -1,5 +1,8 @@
 # provider-github
 
+> [!WARNING]
+> **Deprecated:** Use <https://github.com/crossplane-contrib/provider-upjet-github> instead.
+
 ## Overview
 
 `provider-github` is the Crossplane infrastructure provider for
